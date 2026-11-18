@@ -1,5 +1,4 @@
 # Project Tasks: Heating Energy Index Geneva
-<!-- Version: 1.0 -->
 
 Task list for our group project. It is a guide, not a contract: adjust it as the project develops.
 
