@@ -27,7 +27,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 2 | Freeze the raw data: store all 4 files with their download date, add source links to the README | Person 1 | Person 2 | 18 Nov | Open | |
 | 3 | Answer the lecturer's feedback (14 Nov) point by point in the project description document | Person 5 | All | 19 Nov | Open | 1-5 |
 | 4 | Coaching on 18 Nov, 18:15: bring questions on the selection measure, the split by building class and the interaction terms | All | | 18 Nov | Open | 1, 3, 4 |
-| 5 | Fix three decisions in the README before any modelling: (a) the selection measure; (b) the rule for implausible target values; (c) the list lengths and why | Person 3 | All | 19 Nov | Open | 3, 5 |
+| 5 | Fix three decisions in the README before any modelling: (a) the selection measure; (b) the rule for implausible target values; (c) the list lengths and why | Person 3 | All | 19 Nov | Done, needs to be reviewed | 3, 5 |
 
 ## Phase 2: Data
 
