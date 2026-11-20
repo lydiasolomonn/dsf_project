@@ -18,3 +18,11 @@ Run the scripts in order:
 1. `01_target.py` – cleans the IDC file, builds the target
 2. `02_features.py` – prepares the register features
 3. `03_merge.py` – merges everything, adds house flag and group ID → `data/processed/model_table.csv`
+
+
+##Decisions:
+
+1. Our selection measure: We choose models by the share of houses above 450 among the top 20% of the ranking. It fits the outreach decision, and it applies to every model we compare: regression models rank by predicted index, the classification model by predicted probability, and the baselines by their group averages.
+2. Implausible target values: We remove buildings whose 3-year average is below 50 or above 1,500 MJ/m² per year(25 buildings, 1 house). Even very efficient buildings lie above 50, so lower values point to a wrong floor area; values above 1,500, about three times the threshold,
+point to data errors. The rule was fixed before the test set was used.
+3. List length: The right length is the office’s capacity. Since we don’t know it, we show the whole curve and report 10% and 20% as examples of a small and a medium campaign, both below the 37.5% share of problem houses. Up to that share, a perfect model could fill the whole list with problem houses only.

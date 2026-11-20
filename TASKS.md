@@ -27,7 +27,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 2 | Freeze the raw data: store all 4 files with their download date, add source links to the README | Person 1 | Person 2 | 18 Nov | Open | |
 | 3 | Answer the lecturer's feedback (14 Nov) point by point in the project description document | Person 5 | All | 19 Nov | Open | 1-5 |
 | 4 | Coaching on 18 Nov, 18:15: bring questions on the selection measure, the split by building class and the interaction terms | All | | 18 Nov | Open | 1, 3, 4 |
-| 5 | Fix three decisions in the README before any modelling: (a) the selection measure; (b) the rule for implausible target values; (c) the list lengths and why | Person 3 | All | 19 Nov | Open | 3, 5 |
+| 5 | Fix three decisions in the README before any modelling: (a) the selection measure; (b) the rule for implausible target values; (c) the list lengths and why | Person 3 | All | 19 Nov | Done, needs to be reviewed | 3, 5 |
 
 ## Phase 2: Data
 
@@ -49,7 +49,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | No | Task | Owner | Reviewer | Due | Status | FB |
 | --- | --- | --- | --- | --- | --- | --- |
 | 16 | Split: hold out 15% as test set, by group and stratified by building class. Lock it away. Set up 5-fold cross-validation on the rest, groups kept together, also by building class | Person 3 | Person 4 | 21 Nov | Open | 1 |
-| 17 | Write the metric functions: the selection measure from task 5 on houses; MAE and share captured; each for houses and for all buildings | Person 3 | Person 5 | 21 Nov | Open | 1, 3 |
+| 17 | Write the metric functions: the selection measure from task 5 on houses; MAE and share captured; each for houses and for all buildings | Person 3 | Person 5 | 21 Nov | done, needs to be reviewed | 1, 3 |
 | 18 | Compute the baselines in cross-validation: training mean, and the expert rule construction period by energy source; scored on houses | Person 3 | Person 4 | 22 Nov | Open | 1, 4 |
 | 19 | Preprocessing as a pipeline, fitted on the training part of each fold only: encoding, scaling, and the interaction of construction period and energy source | Person 4 | Person 3 | 22 Nov | Open | 4 |
 | 20 | Train linear regression, ridge and lasso, with and without the interaction; choose settings by cross-validation on houses with the selection measure | Person 4 | Person 3 | 23 Nov | Open | 3, 4 |
