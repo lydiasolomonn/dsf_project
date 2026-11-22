@@ -23,7 +23,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 
 | No | Task | Owner | Reviewer | Due | Status | FB |
 | --- | --- | --- | --- | --- | --- | --- |
-| 1 | Set up the GitHub repo: folder structure, README skeleton, fixed random seeds | Person 5 | Person 3 | 17 Nov | Open | |
+| 1 | Set up the GitHub repo: folder structure, README skeleton, fixed random seeds | All | Person 3 | 17 Nov | Done | |
 | 2 | Freeze the raw data: store all 4 files with their download date, add source links to the README | Person 1 | Person 2 | 18 Nov | Open | |
 | 3 | Answer the lecturer's feedback (14 Nov) point by point in the project description document | Person 5 | All | 19 Nov | Open | 1-5 |
 | 4 | Coaching on 18 Nov, 18:15: bring questions on the selection measure, the split by building class and the interaction terms | All | | 18 Nov | Open | 1, 3, 4 |
