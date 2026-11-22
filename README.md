@@ -1,7 +1,7 @@
 # Predicting the Heating Energy Index (IDC) of Geneva Buildings
 ## Data
 All raw files are stored unchanged in `data/raw/`. They were downloaded on 13 November 2026.
-Do not edit them; all cleaning happens in the scripts.
+Do not edit them; all cleaning happens in the notebooks in `code/`.
 
 | File | Dataset | Publisher | Used for | Source |
 |---|---|---|---|---|
@@ -14,15 +14,45 @@ Do not edit them; all cleaning happens in the scripts.
 All files are linked by the federal building number (EGID).
 
 ## How to run
-Run the scripts in order:
-1. `01_target.py` – cleans the IDC file, builds the target
-2. `02_features.py` – prepares the register features
-3. `03_merge.py` – merges everything, adds house flag and group ID → `data/processed/model_table.csv`
+**Requirements:** Python 3 with `pandas`, `numpy`, `matplotlib`, `scikit-learn` and `nbformat`
+(`nbformat` is needed to run notebooks with `%run`; the first cell of `04_main.ipynb` installs it).
+
+**Run:** open `code/04_main.ipynb`, select the kernel and choose **Run All**. It runs the other notebooks in order.
+Run it from the `code/` folder, because the notebooks use relative paths (`../data`, `../output`).
+It sets `np.random.seed(42)`; splits and tie-breaks also use fixed seeds.
+
+| File | What it does | Output |
+|---|---|---|
+| `04_main.ipynb` | runs the notebooks below in order | – |
+| `01_preprocess.ipynb` | target, implausible values, register features, house flag, year effect, heating checks, split groups, merge loss | `data/processed/building_clean.csv`, `output/merge_loss.csv`, `output/year_effect.png` |
+| `02_estimate.ipynb` | models; so far a check of the expert-rule feature | – |
+| `03_evaluate.ipynb` | checks of the metric functions | – |
+| `pipeline.py` | preprocessing pipeline used by all models | – |
+| `metrics.py` | shared metric functions (task 17) | – |
+
+## Repository structure
+- `code/` – notebooks and Python modules (see above)
+- `data/raw/` – frozen raw files, never edited
+- `data/processed/` – `building_clean.csv`, the modelling table (one row per building)
+- `output/` – tables and figures (`figures/`, `tables/`, merge loss, year effect)
+- `old/` – earlier project idea (Zurich injury accidents), not used
+- `TASKS.md` – task list with owners and status
+- `Predicting the Heating Energy Index of Geneva Buildings (3).md` – project description with the lecturer's feedback
+- `Project_report.tex` – report
 
 
-##Decisions:
+## Decisions:
 
 1. Our selection measure: We choose models by the share of houses above 450 among the top 20% of the ranking. It fits the outreach decision, and it applies to every model we compare: regression models rank by predicted index, the classification model by predicted probability, and the baselines by their group averages.
 2. Implausible target values: We remove buildings whose 3-year average is below 50 or above 1,500 MJ/m² per year(25 buildings, 1 house). Even very efficient buildings lie above 50, so lower values point to a wrong floor area; values above 1,500, about three times the threshold,
 point to data errors. The rule was fixed before the test set was used.
 3. List length: The right length is the office’s capacity. Since we don’t know it, we show the whole curve and report 10% and 20% as examples of a small and a medium campaign, both below the 37.5% share of problem houses. Up to that share, a perfect model could fill the whole list with problem houses only.
+
+### Preprocessing pipeline (fixed 22 Nov 2026)
+All steps are in `code/pipeline.py` and are fitted on the training part of each fold only.
+
+4. Expert rule as one feature (target encoding): Instead of a dummy for each of the roughly 100 combinations of construction period and energy source, the model gets the expert rule's value, the mean heating index of the building's combination, as one extra column. We agreed on this with the lecturer. Small combinations are noisy, so they are pulled towards the overall mean: (n · mean of the combination + m · overall mean) / (n + m), with m = 20. We use our own class `ExpertRuleEncoder` instead of sklearn's `TargetEncoder`, because its internal cross-fitting ignores the boiler groups. Models are compared with and without this column.
+5. Energy groups: We use `energy_group` (8 groups) instead of the 18 register codes, the same grouping as in the heating check. The group "other" mainly holds "Unbestimmt" (617 buildings) and "Andere" (196).
+6. Rare categories: Categories seen fewer than 20 times in training, and categories not seen in training at all, go into one "infrequent" column.
+7. Numbers: Missing floors are filled with the training median. Floor area, floors and dwellings are transformed with log(1 + x) against their strong skew and then standardised, which ridge and lasso need.
+8. No dropped dummy: Every category keeps its own column. Ridge and lasso do not need a reference category and the predictions of linear regression do not change, but single linear-regression coefficients cannot be interpreted on their own.
