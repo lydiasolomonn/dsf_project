@@ -101,7 +101,7 @@ def plot_validation_curve(tables, title, reference=None, path=None, metric=SELEC
     Top: selection measure on houses (mean over the folds, band = +- one standard error) with the best alpha.
     Bottom: MAE on houses."""
     reference = reference or {}
-    fig, (ax_top, ax_mae) = plt.subplots(2, 1, figsize=(8, 7), sharex=True,
+    fig, (ax_top, ax_mae) = plt.subplots(2, 1, figsize=(11, 7), sharex=True,
                                          gridspec_kw={"height_ratios": [2, 1]})
 
     for i, (label, table) in enumerate(tables.items()):
@@ -120,14 +120,17 @@ def plot_validation_curve(tables, title, reference=None, path=None, metric=SELEC
         ax_mae.fill_between(t["alpha"], t["mae_mean"] - t["mae_se"], t["mae_mean"] + t["mae_se"],
                             color=color, alpha=0.15)
 
-    styles = ["--", ":", "-.", (0, (5, 1))]
+    # reference lines: own colour and style each, none of them C0/C1 (used by the curves)
+    styles = ["--", ":", "-.", (0, (5, 1)), (0, (1, 2))]
+    colors = ["grey", "black", "C3", "C2", "C4"]
     for j, (label, value) in enumerate(reference.items()):
-        ax_top.axhline(value * 100, color="grey", linestyle=styles[j % len(styles)], linewidth=1, label=label)
+        ax_top.axhline(value * 100, color=colors[j % len(colors)], linestyle=styles[j % len(styles)],
+                       linewidth=1.2, label=label)
 
     ax_top.set_xscale("log")
     ax_top.set_ylabel("Houses above 450 in top 20% (%)")
     ax_top.set_title(title)
-    ax_top.legend(fontsize=8, loc="best")
+    ax_top.legend(fontsize=8, loc="upper left", bbox_to_anchor=(1.01, 1))  # next to the plot, covers nothing
     ax_mae.set_xlabel("alpha (penalty strength, log scale)")
     ax_mae.set_ylabel("MAE on houses")
     fig.tight_layout()
