@@ -46,7 +46,7 @@ It sets `np.random.seed(42)`; splits and tie-breaks also use fixed seeds.
 1. Our selection measure: We choose models by the share of houses above 450 among the top 20% of the ranking. It fits the outreach decision, and it applies to every model we compare: regression models rank by predicted index, the classification model by predicted probability, and the baselines by their group averages.
 2. Implausible target values: We remove buildings whose 3-year average is below 50 or above 1,500 MJ/m² per year(25 buildings, 1 house). Even very efficient buildings lie above 50, so lower values point to a wrong floor area; values above 1,500, about three times the threshold,
 point to data errors. The rule was fixed before the test set was used.
-3. List length: The right length is the office’s capacity. Since we don’t know it, we show the whole curve and report 10% and 20% as examples of a small and a medium campaign, both below the 37.5% share of problem houses. Up to that share, a perfect model could fill the whole list with problem houses only.
+3. List length: The right length is the office’s capacity. Since we don’t know it, we show the whole curve and report 10% and 20% as examples of a small and a medium campaign, both below the 37.7% share of problem houses. Up to that share, a perfect model could fill the whole list with problem houses only.
 
 ### Preprocessing pipeline (fixed 22 Nov 2026)
 All steps are in `code/pipeline.py` and are fitted on the training part of each fold only.
@@ -57,9 +57,21 @@ All steps are in `code/pipeline.py` and are fitted on the training part of each 
 7. Numbers: Missing floors are filled with the training median. Floor area, floors and dwellings are transformed with log(1 + x) against their strong skew and then standardised, which ridge and lasso need.
 8. No dropped dummy: Every category keeps its own column. Ridge and lasso do not need a reference category and the predictions of linear regression do not change, but single linear-regression coefficients cannot be interpreted on their own.
 
+### Split (task 16, fixed 23 Nov 2026)
+The split is made once in `code/01b_split.ipynb` and saved in `data/processed/split.csv` (EGID, test, fold).
+
+9. Test set and folds: `StratifiedGroupKFold` splits the buildings into 7 parts; one part is the test set (2,117 buildings, 195 houses, 14.3%), used only once at the end (task 26). It has no option for the test size, and 1 of 7 parts is closest to the usual 15%. The other 12,710 buildings are split the same way into 5 folds for cross-validation.
+10. Groups and houses: buildings in the same group (shared boiler or twins) always stay in the same part, so a model cannot predict a building by copying its twin. Houses have the same share (9.2%) in every part. The share of houses above 450 is not balanced on purpose and varies between 36% and 40%.
+
+### Baselines (task 18, fixed 23 Nov 2026)
+Computed in `code/03_evaluate.ipynb` on the same 5 folds and with the same measures as the models.
+
+11. Training mean: every building gets the average index of the training folds. All scores are equal, so the ranking is random; this is a sanity check and should give about the share of houses above 450.
+12. Expert rule: every building gets the average index of its construction period × energy group in the training folds, without smoothing, as an expert would use it. A combination not seen in training gets the overall mean. The models must beat this rule to be useful (lecturer's feedback point 4).
+
 ### Models (task 20, fixed 23 Nov 2026)
 All models run in `code/02_estimate.ipynb` with the cross-validation in `code/cv.py` and the folds from `01b_split.ipynb`.
 
-9. Cross-validation: In every fold the model is trained on all buildings of the other four folds and scored on the houses of the validation fold; results for all buildings are reported next to them. Linear regression, ridge and lasso each run with and without the expert-rule column.
-10. Choosing alpha: For ridge (0.01 to 100,000) and lasso (0.001 to 100, 26 to 29 values on a log scale) we take the alpha with the highest mean selection measure on houses over the 5 folds; if several alphas have the same mean, the smaller MAE on houses decides. The selection measure only depends on the order of the houses, so it changes little with alpha; differences between alphas mostly lie within one standard error (about 47 houses in the top 20% of a fold).
-11. One seed: `code/config.py` holds the project seed (42) and the threshold (450); all notebooks and modules import them from there.
+13. Cross-validation: In every fold the model is trained on all buildings of the other four folds and scored on the houses of the validation fold; results for all buildings are reported next to them. Linear regression, ridge and lasso each run with and without the expert-rule column.
+14. Choosing alpha: For ridge (0.01 to 100,000) and lasso (0.001 to 100, 26 to 29 values on a log scale) we take the alpha with the highest mean selection measure on houses over the 5 folds; if several alphas have the same mean, the smaller MAE on houses decides. The selection measure only depends on the order of the houses, so it changes little with alpha; differences between alphas mostly lie within one standard error (about 47 houses in the top 20% of a fold).
+15. One seed: `code/config.py` holds the project seed (42) and the threshold (450); all notebooks and modules import them from there.

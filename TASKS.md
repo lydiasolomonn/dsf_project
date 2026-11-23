@@ -50,7 +50,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | --- | --- | --- | --- | --- | --- | --- |
 | 16 | Split: hold out 15% as test set, by group and stratified by building class. Lock it away. Set up 5-fold cross-validation on the rest, groups kept together, also by building class | Person 3 | Person 4 | 21 Nov | done, needs to be reviewed | 1 |
 | 17 | Write the metric functions: the selection measure from task 5 on houses; MAE and share captured; each for houses and for all buildings | Person 3 | Person 5 | 21 Nov | done, needs to be reviewed | 1, 3 |
-| 18 | Compute the baselines in cross-validation: training mean, and the expert rule construction period by energy source; scored on houses | Person 3 | Person 4 | 22 Nov | Open | 1, 4 |
+| 18 | Compute the baselines in cross-validation: training mean, and the expert rule construction period by energy source; scored on houses | Person 3 | Person 4 | 22 Nov | done, needs to be reviewed | 1, 4 |
 | 19 | Preprocessing as a pipeline, fitted on the training part of each fold only: encoding, scaling, and the interaction of construction period and energy source | Person 4 | Person 3 | 22 Nov | Done, needs review  | 4 |
 | 20 | Train linear regression, ridge and lasso, with and without the interaction; choose settings by cross-validation on houses with the selection measure | Person 4 | Person 3 | 23 Nov | Done, needs review | 3, 4 |
 | 21 | Classification variant (above 450 or not) with logistic regression, compared on the same selection measure | Person 5 | Person 4 | 24 Nov | Open | 3 |
