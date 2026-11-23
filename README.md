@@ -56,3 +56,10 @@ All steps are in `code/pipeline.py` and are fitted on the training part of each 
 6. Rare categories: Categories seen fewer than 20 times in training, and categories not seen in training at all, go into one "infrequent" column.
 7. Numbers: Missing floors are filled with the training median. Floor area, floors and dwellings are transformed with log(1 + x) against their strong skew and then standardised, which ridge and lasso need.
 8. No dropped dummy: Every category keeps its own column. Ridge and lasso do not need a reference category and the predictions of linear regression do not change, but single linear-regression coefficients cannot be interpreted on their own.
+
+### Models (task 20, fixed 23 Nov 2026)
+All models run in `code/02_estimate.ipynb` with the cross-validation in `code/cv.py` and the folds from `01b_split.ipynb`.
+
+9. Cross-validation: In every fold the model is trained on all buildings of the other four folds and scored on the houses of the validation fold; results for all buildings are reported next to them. Linear regression, ridge and lasso each run with and without the expert-rule column.
+10. Choosing alpha: For ridge (0.01 to 100,000) and lasso (0.001 to 100, 26 to 29 values on a log scale) we take the alpha with the highest mean selection measure on houses over the 5 folds; if several alphas have the same mean, the smaller MAE on houses decides. The selection measure only depends on the order of the houses, so it changes little with alpha; differences between alphas mostly lie within one standard error (about 47 houses in the top 20% of a fold).
+11. One seed: `code/config.py` holds the project seed (42) and the threshold (450); all notebooks and modules import them from there.
