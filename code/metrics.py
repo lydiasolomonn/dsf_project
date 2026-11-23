@@ -6,7 +6,7 @@
 import numpy as np
 import pandas as pd
 
-THRESHOLD = 450  # legal threshold in MJ/m² per year (3-year average)
+from config import SEED, THRESHOLD  # THRESHOLD: legal threshold in MJ/m² per year (3-year average)
 
 
 def _top_positions(score, top):
@@ -14,7 +14,7 @@ def _top_positions(score, top):
     
     score = np.asarray(score, dtype=float)
     n_top = max(1, int(round(top * len(score))))       # for example 20% of 250 = 50 buildings
-    tie_breaker = np.random.default_rng(0).random(len(score))
+    tie_breaker = np.random.default_rng(SEED).random(len(score))
     order = np.lexsort((tie_breaker, -score))          # sort by score, highest first
     return order[:n_top]
 
