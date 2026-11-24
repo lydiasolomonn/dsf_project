@@ -18,7 +18,7 @@ All files are linked by the federal building number (EGID).
 (`nbformat` is needed to run notebooks with `%run`; the first cell of `00_main.ipynb` installs it).
 
 **Run:** open `code/00_main.ipynb`, select the kernel and choose **Run All**. It runs the notebooks of the five steps
-in order (about 25 minutes, most of it `04_models.ipynb`). Every notebook can also be run on its own once the
+in order (about 5 minutes, most of it `04_models.ipynb`). Every notebook can also be run on its own once the
 notebooks before it have written their files. Paths come from `config.py`, so the working directory does not matter.
 All notebooks and modules take the seed from `config.py` (decision 15).
 
