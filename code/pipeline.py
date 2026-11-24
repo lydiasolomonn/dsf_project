@@ -5,11 +5,13 @@
 
 import numpy as np
 import pandas as pd
-from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, TransformerMixin, clone
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
+
+from config import THRESHOLD
 
 
 # ---------------------------------------------------------------------------
@@ -145,3 +147,46 @@ def build_pipeline(model, expert_rule=True, heating=True, municipality=True, smo
         ("prep", build_preprocessor(expert_rule, heating, municipality, smoothing)),
         ("model", model),
     ])
+
+
+# ---------------------------------------------------------------------------
+# G. Models that need a small adapter
+# ---------------------------------------------------------------------------
+class AboveThreshold(ClassifierMixin, BaseEstimator):
+    """Classification variant (task 21): learns "above 450 or not" from the heating index.
+
+    The pipeline passes the index y to every step, so the preprocessing (and the expert rule in it)
+    still learns from the index, exactly as for the regressions. Only this last step turns y into
+    above / not above the threshold. Use it with predicts_index=False in cv.cross_validate:
+    the score is the predicted probability of being above the threshold.
+
+    Example: build_pipeline(AboveThreshold(LogisticRegression(C=10, max_iter=5000)))
+    """
+
+    def __init__(self, model=None, threshold=THRESHOLD):
+        self.model = model
+        self.threshold = threshold
+
+    def fit(self, X, y):
+        self.model_ = clone(self.model).fit(X, np.asarray(y, dtype=float) > self.threshold)
+        self.classes_ = self.model_.classes_
+        return self
+
+    def predict_proba(self, X):
+        return self.model_.predict_proba(X)
+
+    def predict(self, X):
+        return self.model_.predict(X)
+
+
+class ExpertRuleBaseline(RegressorMixin, BaseEstimator):
+    """Baseline expert rule (task 18, README decision 12): every building gets the mean index of its
+    construction period x energy group in the training part, without smoothing. A combination not seen
+    in training gets the overall mean. Takes the raw table (no preprocessing)."""
+
+    def fit(self, X, y):
+        self.rule_ = ExpertRuleEncoder(smoothing=0).fit(X[RULE_COLUMNS], y)
+        return self
+
+    def predict(self, X):
+        return self.rule_.transform(X[RULE_COLUMNS]).ravel()
