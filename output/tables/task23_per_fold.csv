@@ -1,0 +1,11 @@
+model,fold,A: all buildings (%),B: houses only (%),B minus A (points)
+Linear regression,0,46.8,55.3,8.5
+Linear regression,1,46.8,55.3,8.5
+Linear regression,2,61.7,55.3,-6.4
+Linear regression,3,57.4,68.1,10.6
+Linear regression,4,57.4,55.3,-2.1
+Ridge,0,46.8,57.4,10.6
+Ridge,1,53.2,59.6,6.4
+Ridge,2,61.7,59.6,-2.1
+Ridge,3,63.8,68.1,4.3
+Ridge,4,46.8,57.4,10.6
