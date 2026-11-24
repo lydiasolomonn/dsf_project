@@ -19,16 +19,20 @@ All files are linked by the federal building number (EGID).
 
 **Run:** open `code/04_main.ipynb`, select the kernel and choose **Run All**. It runs the other notebooks in order.
 Run it from the `code/` folder, because the notebooks use relative paths (`../data`, `../output`).
-It sets `np.random.seed(42)`; splits and tie-breaks also use fixed seeds.
+All notebooks and modules take the seed from `config.py` (decision 15).
 
 | File | What it does | Output |
 |---|---|---|
 | `04_main.ipynb` | runs the notebooks below in order | – |
 | `01_preprocess.ipynb` | target, implausible values, register features, house flag, year effect, heating checks, split groups, merge loss | `data/processed/building_clean.csv`, `output/merge_loss.csv`, `output/year_effect.png` |
-| `02_estimate.ipynb` | models; so far a check of the expert-rule feature | – |
+| `01b_split.ipynb` | test set and cross-validation folds (task 16) | `data/processed/split.csv` |
+| `01c_baselines.ipynb` | baselines in cross-validation: training mean and expert rule (task 18) | `output/tables/task18_baselines.csv`, `task18_oof_predictions.csv` |
+| `02_estimate.ipynb` | linear regression, ridge and lasso in cross-validation (task 20) | `output/tables/task20_*.csv`, `output/figures/task20_*.png` |
 | `03_evaluate.ipynb` | checks of the metric functions | – |
+| `config.py` | project seed and threshold | – |
 | `pipeline.py` | preprocessing pipeline used by all models | – |
 | `metrics.py` | shared metric functions (task 17) | – |
+| `cv.py` | cross-validation, choice of alpha and plots (task 20) | – |
 
 ## Repository structure
 - `code/` – notebooks and Python modules (see above)
@@ -64,7 +68,7 @@ The split is made once in `code/01b_split.ipynb` and saved in `data/processed/sp
 10. Groups and houses: buildings in the same group (shared boiler or twins) always stay in the same part, so a model cannot predict a building by copying its twin. Houses have the same share (9.2%) in every part. The share of houses above 450 is not balanced on purpose and varies between 36% and 40%.
 
 ### Baselines (task 18, fixed 23 Nov 2026)
-Computed in `code/03_evaluate.ipynb` on the same 5 folds and with the same measures as the models.
+Computed in `code/01c_baselines.ipynb`, after the split and before the models, on the same 5 folds and with the same measures as the models.
 
 11. Training mean: every building gets the average index of the training folds. All scores are equal, so the ranking is random; this is a sanity check and should give about the share of houses above 450.
 12. Expert rule: every building gets the average index of its construction period × energy group in the training folds, without smoothing, as an expert would use it. A combination not seen in training gets the overall mean. The models must beat this rule to be useful (lecturer's feedback point 4).
