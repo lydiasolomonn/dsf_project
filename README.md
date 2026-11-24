@@ -28,6 +28,7 @@ All notebooks and modules take the seed from `config.py` (decision 15).
 | `01b_split.ipynb` | test set and cross-validation folds (task 16) | `data/processed/split.csv` |
 | `01c_baselines.ipynb` | baselines in cross-validation: training mean and expert rule (task 18) | `output/tables/task18_baselines.csv`, `task18_oof_predictions.csv` |
 | `02_estimate.ipynb` | linear regression, ridge and lasso in cross-validation (task 20) | `output/tables/task20_*.csv`, `output/figures/task20_*.png` |
+| `02c_feature_sets.ipynb` | feature sets: with and without heating information and municipality (task 22); run after `02_estimate.ipynb` | `output/tables/task22_*.csv`, `output/figures/task22_feature_sets.png` |
 | `03_evaluate.ipynb` | checks of the metric functions | – |
 | `config.py` | project seed and threshold | – |
 | `pipeline.py` | preprocessing pipeline used by all models | – |
@@ -79,3 +80,8 @@ All models run in `code/02_estimate.ipynb` with the cross-validation in `code/cv
 13. Cross-validation: In every fold the model is trained on all buildings of the other four folds and scored on the houses of the validation fold; results for all buildings are reported next to them. Linear regression, ridge and lasso each run with and without the expert-rule column.
 14. Choosing alpha: For ridge (0.01 to 100,000) and lasso (0.001 to 100, 26 to 29 values on a log scale) we take the alpha with the highest mean selection measure on houses over the 5 folds; if several alphas have the same mean, the smaller MAE on houses decides. The selection measure only depends on the order of the houses, so it changes little with alpha; differences between alphas mostly lie within one standard error (about 47 houses in the top 20% of a fold).
 15. One seed: `code/config.py` holds the project seed (42) and the threshold (450); all notebooks and modules import them from there.
+
+### Feature sets (task 22, fixed 24 Nov 2026)
+Computed in `code/02c_feature_sets.ipynb` with the switches of `build_pipeline` (`heating`, `municipality`, `expert_rule`).
+
+16. Feature sets: We compare five sets: full (as in task 20), full without the expert rule, without municipality, without heating information (energy group and heating system; the expert rule then drops out too, because it needs the energy group), and without both. Everything else is as in task 20: same folds, trained on all buildings, scored on houses, linear regression, ridge and lasso with the same alpha values. Alpha is chosen again for every feature set with the rule of decision 14, so that no set is held back by a penalty tuned for another one. Each set is compared with the full set fold by fold, on the same houses. Reason: the register shows today's heating, which we cannot check for undeclared houses (lecturer's feedback point 2), so we want to know how much the ranking depends on it.

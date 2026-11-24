@@ -1,0 +1,76 @@
+model,feature set,fold,top 20%: above 450 (%),minus full (points)
+Linear regression,Full,0,46.8,0.0
+Linear regression,Full,1,46.8,0.0
+Linear regression,Full,2,61.7,0.0
+Linear regression,Full,3,57.4,0.0
+Linear regression,Full,4,57.4,0.0
+Linear regression,"Full, no expert rule",0,48.9,2.1
+Linear regression,"Full, no expert rule",1,46.8,0.0
+Linear regression,"Full, no expert rule",2,57.4,-4.3
+Linear regression,"Full, no expert rule",3,57.4,0.0
+Linear regression,"Full, no expert rule",4,57.4,0.0
+Linear regression,No municipality,0,42.6,-4.3
+Linear regression,No municipality,1,53.2,6.4
+Linear regression,No municipality,2,68.1,6.4
+Linear regression,No municipality,3,61.7,4.3
+Linear regression,No municipality,4,46.8,-10.6
+Linear regression,No heating,0,48.9,2.1
+Linear regression,No heating,1,48.9,2.1
+Linear regression,No heating,2,59.6,-2.1
+Linear regression,No heating,3,48.9,-8.5
+Linear regression,No heating,4,59.6,2.1
+Linear regression,"No heating, no municipality",0,40.4,-6.4
+Linear regression,"No heating, no municipality",1,36.2,-10.6
+Linear regression,"No heating, no municipality",2,66.0,4.3
+Linear regression,"No heating, no municipality",3,70.2,12.8
+Linear regression,"No heating, no municipality",4,48.9,-8.5
+Ridge,Full,0,46.8,0.0
+Ridge,Full,1,53.2,0.0
+Ridge,Full,2,61.7,0.0
+Ridge,Full,3,63.8,0.0
+Ridge,Full,4,46.8,0.0
+Ridge,"Full, no expert rule",0,48.9,2.1
+Ridge,"Full, no expert rule",1,46.8,-6.4
+Ridge,"Full, no expert rule",2,57.4,-4.3
+Ridge,"Full, no expert rule",3,57.4,-6.4
+Ridge,"Full, no expert rule",4,57.4,10.6
+Ridge,No municipality,0,42.6,-4.3
+Ridge,No municipality,1,53.2,0.0
+Ridge,No municipality,2,68.1,6.4
+Ridge,No municipality,3,61.7,-2.1
+Ridge,No municipality,4,46.8,0.0
+Ridge,No heating,0,46.8,0.0
+Ridge,No heating,1,53.2,0.0
+Ridge,No heating,2,66.0,4.3
+Ridge,No heating,3,53.2,-10.6
+Ridge,No heating,4,59.6,12.8
+Ridge,"No heating, no municipality",0,42.6,-4.3
+Ridge,"No heating, no municipality",1,36.2,-17.0
+Ridge,"No heating, no municipality",2,63.8,2.1
+Ridge,"No heating, no municipality",3,68.1,4.3
+Ridge,"No heating, no municipality",4,53.2,6.4
+Lasso,Full,0,46.8,0.0
+Lasso,Full,1,46.8,0.0
+Lasso,Full,2,61.7,0.0
+Lasso,Full,3,57.4,0.0
+Lasso,Full,4,57.4,0.0
+Lasso,"Full, no expert rule",0,46.8,0.0
+Lasso,"Full, no expert rule",1,51.1,4.3
+Lasso,"Full, no expert rule",2,63.8,2.1
+Lasso,"Full, no expert rule",3,61.7,4.3
+Lasso,"Full, no expert rule",4,46.8,-10.6
+Lasso,No municipality,0,42.6,-4.3
+Lasso,No municipality,1,53.2,6.4
+Lasso,No municipality,2,68.1,6.4
+Lasso,No municipality,3,61.7,4.3
+Lasso,No municipality,4,46.8,-10.6
+Lasso,No heating,0,48.9,2.1
+Lasso,No heating,1,51.1,4.3
+Lasso,No heating,2,63.8,2.1
+Lasso,No heating,3,53.2,-4.3
+Lasso,No heating,4,57.4,0.0
+Lasso,"No heating, no municipality",0,40.4,-6.4
+Lasso,"No heating, no municipality",1,36.2,-10.6
+Lasso,"No heating, no municipality",2,66.0,4.3
+Lasso,"No heating, no municipality",3,70.2,12.8
+Lasso,"No heating, no municipality",4,53.2,-4.3
