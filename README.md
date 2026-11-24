@@ -15,35 +15,41 @@ All files are linked by the federal building number (EGID).
 
 ## How to run
 **Requirements:** Python 3 with `pandas`, `numpy`, `matplotlib`, `scikit-learn` and `nbformat`
-(`nbformat` is needed to run notebooks with `%run`; the first cell of `04_main.ipynb` installs it).
+(`nbformat` is needed to run notebooks with `%run`; the first cell of `00_main.ipynb` installs it).
 
-**Run:** open `code/04_main.ipynb`, select the kernel and choose **Run All**. It runs the other notebooks in order.
-Run it from the `code/` folder, because the notebooks use relative paths (`../data`, `../output`).
+**Run:** open `code/00_main.ipynb`, select the kernel and choose **Run All**. It runs the notebooks of the five steps
+in order (about 25 minutes, most of it `04_models.ipynb`). Every notebook can also be run on its own once the
+notebooks before it have written their files. Paths come from `config.py`, so the working directory does not matter.
 All notebooks and modules take the seed from `config.py` (decision 15).
 
-| File | What it does | Output |
-|---|---|---|
-| `04_main.ipynb` | runs the notebooks below in order | – |
-| `01_preprocess.ipynb` | target, implausible values, register features, house flag, year effect, heating checks, split groups, merge loss | `data/processed/building_clean.csv`, `output/merge_loss.csv`, `output/year_effect.png` |
-| `01b_split.ipynb` | test set and cross-validation folds (task 16) | `data/processed/split.csv` |
-| `01c_baselines.ipynb` | baselines in cross-validation: training mean and expert rule (task 18) | `output/tables/task18_baselines.csv`, `task18_oof_predictions.csv` |
-| `02_estimate.ipynb` | linear regression, ridge and lasso in cross-validation (task 20) | `output/tables/task20_*.csv`, `output/figures/task20_*.png` |
-| `02c_feature_sets.ipynb` | feature sets: with and without heating information and municipality (task 22); run after `02_estimate.ipynb` | `output/tables/task22_*.csv`, `output/figures/task22_feature_sets.png` |
-| `03_evaluate.ipynb` | checks of the metric functions | – |
-| `config.py` | project seed and threshold | – |
-| `pipeline.py` | preprocessing pipeline used by all models | – |
-| `metrics.py` | shared metric functions (task 17) | – |
-| `cv.py` | cross-validation, choice of alpha and plots (task 20) | – |
+| Step | File | What it does | Output |
+|---|---|---|---|
+| – | `00_main.ipynb` | runs the notebooks below in order | – |
+| 1 Data | `01_preprocess.ipynb` | target, implausible values, register features, house flag, year effect, heating checks, split groups, merge loss (tasks 6–12) | `data/processed/building_clean.csv`, `output/tables/preprocess_merge_loss.csv`, `output/figures/preprocess_year_effect.png` |
+| 2 Explore | `02_describe.ipynb` | target group, declared vs. undeclared houses, descriptive analysis (tasks 13–15) | `output/*/describe_*` |
+| 3 Split & pipeline | `03_split_pipeline.ipynb` | test set and folds (task 16); checks of the metric functions, the expert rule and the pipeline (tasks 17, 19) | `data/processed/cv.csv`, `data/processed/test.csv` |
+| 4 Models | `04_models.ipynb` | all model variants in cross-validation, trained once and compared: baselines (18), linear regression, ridge, lasso (20), classification (21), feature sets (22), houses only (23) | `output/tables/models_*.csv`, `output/figures/models_*.png` |
+| 5 Evaluation | `05_evaluation.ipynb` | choice of the final model, error analysis (24), test set (26), hit-rate curve (27) | `output/tables/evaluation_*.csv`, `output/figures/evaluation_*.png` |
+| shared | `config.py` | seed, threshold, paths, `load_cv()` and `load_test()` | – |
+| shared | `pipeline.py` | preprocessing pipeline, classification wrapper and expert-rule baseline used by all models | – |
+| shared | `metrics.py` | shared metric functions (task 17) | – |
+| shared | `cv.py` | cross-validation, choice of alpha / C, comparisons and plots | – |
+
+**The test set is locked away.** `03_split_pipeline.ipynb` writes the cross-validation buildings and the test set into
+two separate files. All notebooks up to the model choice read only `cv.csv` (`load_cv()`); only `05_evaluation.ipynb`
+opens `test.csv` (`load_test()`), once, after the final model is chosen (task 26).
+
+**Adding a model variant:** one line in the list of variants in `04_models.ipynb`, section 2 (and the model in `MODELS`
+if it is a new kind of model, e.g. a tree).
 
 ## Repository structure
 - `code/` – notebooks and Python modules (see above)
 - `data/raw/` – frozen raw files, never edited
-- `data/processed/` – `building_clean.csv`, the modelling table (one row per building)
-- `output/` – tables and figures (`figures/`, `tables/`, merge loss, year effect)
-- `old/` – earlier project idea (Zurich injury accidents), not used
+- `data/processed/` – `building_clean.csv` (modelling table, one row per building), `cv.csv` and `test.csv` (the split)
+- `output/tables/`, `output/figures/` – results of the notebooks, named after their step (`preprocess_`, `models_`, `evaluation_`)
+- `report/` – report (`Project_report.tex`) and material for the presentation (`project_flow*.png`, made by `project_flow.py`)
 - `TASKS.md` – task list with owners and status
 - `Predicting the Heating Energy Index of Geneva Buildings (3).md` – project description with the lecturer's feedback
-- `Project_report.tex` – report
 
 
 ## Decisions:
@@ -63,25 +69,25 @@ All steps are in `code/pipeline.py` and are fitted on the training part of each 
 8. No dropped dummy: Every category keeps its own column. Ridge and lasso do not need a reference category and the predictions of linear regression do not change, but single linear-regression coefficients cannot be interpreted on their own.
 
 ### Split (task 16, fixed 23 Nov 2026)
-The split is made once in `code/01b_split.ipynb` and saved in `data/processed/split.csv` (EGID, test, fold).
+The split is made once in `code/03_split_pipeline.ipynb` and saved in `data/processed/cv.csv` (with the fold) and `data/processed/test.csv`.
 
 9. Test set and folds: `StratifiedGroupKFold` splits the buildings into 7 parts; one part is the test set (2,117 buildings, 195 houses, 14.3%), used only once at the end (task 26). It has no option for the test size, and 1 of 7 parts is closest to the usual 15%. The other 12,710 buildings are split the same way into 5 folds for cross-validation.
 10. Groups and houses: buildings in the same group (shared boiler or twins) always stay in the same part, so a model cannot predict a building by copying its twin. Houses have the same share (9.2%) in every part. The share of houses above 450 is not balanced on purpose and varies between 36% and 40%.
 
 ### Baselines (task 18, fixed 23 Nov 2026)
-Computed in `code/01c_baselines.ipynb`, after the split and before the models, on the same 5 folds and with the same measures as the models.
+Computed in `code/04_models.ipynb` (section 4), on the same 5 folds and with the same measures as the models.
 
 11. Training mean: every building gets the average index of the training folds. All scores are equal, so the ranking is random; this is a sanity check and should give about the share of houses above 450.
 12. Expert rule: every building gets the average index of its construction period × energy group in the training folds, without smoothing, as an expert would use it. A combination not seen in training gets the overall mean. The models must beat this rule to be useful (lecturer's feedback point 4).
 
 ### Models (task 20, fixed 23 Nov 2026)
-All models run in `code/02_estimate.ipynb` with the cross-validation in `code/cv.py` and the folds from `01b_split.ipynb`.
+All models run in `code/04_models.ipynb` with the cross-validation in `code/cv.py` and the folds from `03_split_pipeline.ipynb`.
 
 13. Cross-validation: In every fold the model is trained on all buildings of the other four folds and scored on the houses of the validation fold; results for all buildings are reported next to them. Linear regression, ridge and lasso each run with and without the expert-rule column.
 14. Choosing alpha: For ridge (0.01 to 100,000) and lasso (0.001 to 100, 26 to 29 values on a log scale) we take the alpha with the highest mean selection measure on houses over the 5 folds; if several alphas have the same mean, the smaller MAE on houses decides. The selection measure only depends on the order of the houses, so it changes little with alpha; differences between alphas mostly lie within one standard error (about 47 houses in the top 20% of a fold).
 15. One seed: `code/config.py` holds the project seed (42) and the threshold (450); all notebooks and modules import them from there.
 
 ### Feature sets (task 22, fixed 24 Nov 2026)
-Computed in `code/02c_feature_sets.ipynb` with the switches of `build_pipeline` (`heating`, `municipality`, `expert_rule`).
+Computed in `code/04_models.ipynb` (section 7) with the switches of `build_pipeline` (`heating`, `municipality`, `expert_rule`).
 
 16. Feature sets: We compare five sets: full (as in task 20), full without the expert rule, without municipality, without heating information (energy group and heating system; the expert rule then drops out too, because it needs the energy group), and without both. Everything else is as in task 20: same folds, trained on all buildings, scored on houses, linear regression, ridge and lasso with the same alpha values. Alpha is chosen again for every feature set with the rule of decision 14, so that no set is held back by a penalty tuned for another one. Each set is compared with the full set fold by fold, on the same houses. Reason: the register shows today's heating, which we cannot check for undeclared houses (lecturer's feedback point 2), so we want to know how much the ranking depends on it.

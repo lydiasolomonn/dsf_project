@@ -1,5 +1,0 @@
-model,trained on,alpha,top 20%: above 450 (%),± SE,top 10%: above 450 (%),top 20%: captured (%),MAE
-Linear regression,A: all buildings,–,54.0,3.1,49.2,28.6,104.8
-Linear regression,B: houses only,–,57.9,2.6,58.8,30.6,108.3
-Ridge,A: all buildings,562,54.5,3.6,43.1,28.7,106.7
-Ridge,B: houses only,31.6,60.4,2.0,54.4,31.9,107.1

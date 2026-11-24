@@ -70,7 +70,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 30 | Write the report: everyone writes their own part | All | | 27 Nov | Open | |
 | 31 | Write the AI-use statement: which tools, for which parts | Person 5 | All | 27 Nov | Open | |
 | 32 | Build the slides (8 at most) plus backup slides with details | All | Person 5 | 28 Nov | Open | |
-| 33 | Test replication: clone the repo fresh and run everything from scratch | Person 2 | Person 3 | 28 Nov | Open | |
+| 33 | Test replication: clone the repo fresh and run everything from scratch: first each notebook on its own (restart the kernel, Run All, in the order 01–05), then `00_main.ipynb` | Person 2 | Person 3 | 28 Nov | Open | |
 | 34 | Proofread report and slides: do all numbers match, and is every feedback point answered? | Person 3 | All | 29 Nov | Open | 1-5 |
 | 35 | Submit by 23:59: folder GroupNN-topic with report, slides, data and code | All | Person 1 | 30 Nov | Open | |
 
