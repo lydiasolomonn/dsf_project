@@ -53,7 +53,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 18 | Compute the baselines in cross-validation: training mean, and the expert rule construction period by energy source; scored on houses | Person 3 | Person 4 | 22 Nov | done, needs to be reviewed | 1, 4 |
 | 19 | Preprocessing as a pipeline, fitted on the training part of each fold only: encoding, scaling, and the interaction of construction period and energy source | Person 4 | Person 3 | 22 Nov | Done, needs review  | 4 |
 | 20 | Train linear regression, ridge and lasso, with and without the interaction; choose settings by cross-validation on houses with the selection measure | Person 4 | Person 3 | 23 Nov | Done, needs review | 3, 4 |
-| 21 | Classification variant (above 450 or not) with logistic regression, compared on the same selection measure | Person 5 | Person 4 | 24 Nov | Open | 3 |
+| 21 | Classification variant (above 450 or not) with logistic regression, compared on the same selection measure | Person 5 | Person 4 | 24 Nov | DONE, NEEDS REVIEW | 3 |
 | 22 | Compare feature sets: with and without heating information, with and without municipality | Person 4 | Person 2 | 24 Nov | Open | 2 |
 | 23 | Experiment: trained on houses only versus trained on all, measured on the same houses in cross-validation | Person 1 | Person 4 | 24 Nov | Open | 1 |
 | 24 | Error analysis: errors by building class and construction period, check predictions for plausibility | Person 2 | Person 5 | 24 Nov | Open | |

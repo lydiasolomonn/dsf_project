@@ -1,11 +1,206 @@
-\documentclass{article}
+% =====================================================================
+% Report skeleton (task 28) -- Group 7
+% Predicting the Heating Energy Index of Geneva Buildings
+%
+% HOW TO USE
+% - Every section shows its OWNER (blue) and a PAGE BUDGET. Total: 3 to 6 pages.
+% - Write only in your own sections, so we avoid merge conflicts.
+% - The grey "TODO" lists say what goes in, and where to find it in the repo.
+%   Delete each TODO list when your section is written.
+% - Figures: save them as PNG in output/figures/ and include them with
+%   \includegraphics[width=0.8\textwidth]{output/figures/<name>.png}
+% - Numbers: copy them from output/tables/ (never type them from memory),
+%   so that report, slides and code agree (task 34).
+% - Report houses first, all buildings next to them (feedback point 1).
+% - The test set appears ONLY in section 5.3 (task 26).
+% =====================================================================
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{hyperref}
+
+% --- helpers for the skeleton phase (remove before submission) -------
+\newcommand{\owner}[2]{\noindent\textcolor{blue}{\textbf{Owner: #1} \quad Budget: #2}\par\medskip}
+\newcommand{\todo}[1]{\noindent\textcolor{gray}{\small\textbf{TODO:} #1}\par\medskip}
+% ---------------------------------------------------------------------
+
+\title{Predicting the Heating Energy Index of Geneva Buildings}
+\author{Group 7: [first and last names of all members]}
+\date{[submission date], Fundamentals of Data Science, University of St.\ Gallen}
+
 \begin{document}
-\section{Title}
-\subsection{Subsection}
-Hello world!
+\maketitle
 
-% your content goes here...
+% =====================================================================
+\section{Problem and decision}
+\owner{Person 5}{0.5 page}
+\todo{
+\begin{itemize}
+  \item The decision: OCEN has limited staff and must choose which owners of undeclared buildings to contact first
+        (reminders, checks, advice). About 24,000 buildings have no index yet, mostly houses.
+  \item The heating index (IDC) and the threshold of 450 MJ/m\textsuperscript{2} per year [legal source].
+  \item Our question: predict, from the building register only, which houses are likely above 450, and rank them.
+  \item What the result cannot tell (ranking aid, not a measurement; predictive, not causal).
+  \item Source: project description, section 1.
+\end{itemize}}
+
+% =====================================================================
+\section{Data}
+\owner{Person 1 (2.1, 2.2), Person 2 (2.3), Person 5 (2.4, 2.5)}{1 page}
+
+\subsection{Sources}
+\todo{The five raw files, publishers and download date (README, ``Data'' table). Merged on EGID.}
+
+\subsection{Target and cleaning}
+\todo{
+\begin{itemize}
+  \item Target: latest 3-year average from 2023 on (task 6); year effect (task 10, \texttt{output/year\_effect.png}).
+  \item Cleaning rule fixed before the test set: keep 50--1,500 MJ/m\textsuperscript{2} (README decision 2).
+  \item Merge loss 21,206 $\to$ 14,827 buildings, of which houses (task 7, \texttt{output/merge\_loss.csv}): small table.
+\end{itemize}}
+
+\subsection{Features and the dates of the heating information}
+\todo{
+\begin{itemize}
+  \item Register features (\texttt{pipeline.py}): floor area, floors, dwellings, construction period, building class,
+        energy group, heating system, municipality.
+  \item Heating changes after the target period: rule and counts (task 9, feedback point 2).
+  \item Columns excluded because they contain the answer (leakage).
+\end{itemize}}
+
+\subsection{Descriptive analysis}
+\todo{Distribution of the target, by building class and construction period: 1--2 figures (task 15).
+Share above 450: 38\% of houses, 29\% of all buildings.}
+
+\subsection{Declared versus undeclared houses}
+\todo{Comparison table on register characteristics and one paragraph on what the differences mean for our result
+(task 14, feedback point 1). Target group definition (task 13).}
+
+% =====================================================================
+\section{Method}
+\owner{Person 3 (3.1, 3.2), Person 4 (3.3), Person 5 (3.4)}{1 page}
+
+\subsection{Split and cross-validation}
+\todo{Test set 2,117 buildings (195 houses), locked until the end; 5 folds with boiler groups kept together and the
+same share of houses in every part (README decisions 9--10, task 16, feedback point 1).}
+
+\subsection{Selection measure and baselines}
+\todo{
+\begin{itemize}
+  \item Selection measure: share of houses above 450 among the top 20\% of the ranking; why it fits the outreach
+        decision; MAE reported as an easy number (README decisions 1 and 3, feedback point 3).
+  \item Baselines: training mean and expert rule (construction period $\times$ energy source) (task 18, feedback point 4).
+\end{itemize}}
+
+\subsection{Preprocessing and regression models}
+\todo{Pipeline fitted on the training part of each fold; expert rule as one feature (target encoding);
+linear regression, ridge, lasso with and without the expert rule; choice of alpha (README decisions 4--8, 13--14,
+tasks 19--20).}
+
+\subsection{Classification variant}
+\todo{Logistic regression on ``above 450 or not''; same folds, features and selection measure; C chosen by
+cross-validation; deck 12 measures (task 21, \texttt{code/02b\_classify.ipynb}).}
+
+% =====================================================================
+\section{Results in cross-validation}
+\owner{Person 4 (4.1, 4.3), Person 5 (4.2), Person 1 (4.4)}{1 page}
+
+\subsection{Model comparison}
+\todo{Table: baselines and all models, houses first, all buildings next to them; mean $\pm$ SE
+(\texttt{output/tables/task18\_baselines.csv}, \texttt{task20\_chosen.csv}). One figure (task 29).}
+
+\subsection{Classification versus regression}
+\todo{Logistic regression 54.5\% vs.\ regression models 53.6--54.5\%; all differences below one SE; confusion matrix
+and precision/recall in one sentence (\texttt{output/tables/task21\_*.csv}).}
+
+\subsection{Feature sets}
+\todo{With and without heating information and municipality (task 22).}
+
+\subsection{Trained on houses only versus all buildings}
+\todo{Same houses, spread across folds (task 23).}
+
+% =====================================================================
+\section{Final model and test result}
+\owner{Person 3 (5.1--5.3), Person 2 (5.4)}{1 page}
+
+\subsection{Choice of the final model}
+\todo{The rule used to choose and the tie-break, fixed before the test set (task 26).}
+
+\subsection{Test result}
+\todo{Evaluated exactly once on the test set; houses first, all buildings beside them (task 26).}
+
+\subsection{Hit-rate curve and list length}
+\todo{Hit rate on test houses for several list lengths, with the number of owners each length means (task 27,
+feedback point 5).}
+
+\subsection{Error analysis}
+\todo{Errors by building class and construction period; plausibility of the predictions (task 24).}
+
+% =====================================================================
+\section{Limitations and conclusion}
+\owner{Person 5, with input from all}{0.5 page}
+\todo{
+\begin{itemize}
+  \item Declared houses may differ from undeclared ones (section 2.5).
+  \item Register shows today's state; occupant behaviour, insulation and renovations are not in the data.
+  \item Ranking aid, not a measurement; predictive, not causal.
+  \item Conclusion in 3--4 sentences: what the office gains (e.g.\ problem houses per 100 contacted owners).
+\end{itemize}}
+
+% =====================================================================
+Declaration on the Ethical Use of AI and Autonomy 
+This form documents whether and how AI-supported tools (e.g. ChatGPT) were used in the 
+preparation of your scientific work. It promotes the responsible use of AI and does not replace 
+your own work. 
+List of Aids
+Aid/ Tool	Purpose
+Claude/ 	Claude was used to formulate the structure of the paper, simplify explanation of certain topic, improve the linguistic clarity, assist with reference, and assist with certain codes understanding and inspiration. 
+ChatGPT/	Aid for structure.
+DeepL/	DeepL was used for grammar checking.
+
+Declaration of Authorship 
+ 
+I hereby declare, 
+ 
+• that I have written this thesis independently, 
+• that I have written the thesis using only the aids specified in the index; 
+• that all parts of the thesis produced with the help of aids have been declared; 
+• that I have handled both input and output responsibly when using AI. I confirm that I 
+have therefore only read in public data or data released with consent and that I have 
+checked, declared and comprehensibly referenced all results and/or other forms of AI 
+assistance in the required form and that I am aware that I am responsible if incorrect 
+content, violations of data protection law, copyright law or scientific misconduct (e.g. 
+plagiarism) have also occurred unintentionally; 
+• that I have mentioned all sources used and cited them correctly according to established 
+academic citation rules; 
+• that I have acquired all immaterial rights to any materials I may have used, such as 
+images or graphics, or that these materials were created by me; 
+• that the topic, the thesis, or parts of it have not already been the object of any work or 
+examination of another course, unless this has been expressly agreed with the faculty 
+member in advance and is stated as such in the thesis; 
+• that I am aware of the legal provisions regarding the publication and dissemination of 
+parts or the entire thesis and that I comply with them accordingly; 
+• that I am aware that my thesis can be electronically checked for plagiarism and for 
+third-party authorship of human or technical origin, and that I hereby grant the 
+University of St. Gallen the copyright according to the Examination Regulations as far 
+as it is necessary for the administrative actions; 
+• that I am aware that the University will prosecute a violation of this Declaration of 
+Authorship and that disciplinary as well as criminal consequences may result, which 
+may lead to expulsion from the University or to the withdrawal of my title. 
+By submitting this thesis, I confirm through my conclusive action that I am submitting the 
+Declaration of Authorship, that I have read and understood it, and that it is true.
+
+Jenny Braunstorfer, Anastasija Stirbanovic, Lydia Kristina Solomon, Kangyue Wang, Elisa Stepanski
+Signature:
+St. Gallen, November 29th, 2026
 
 
+% =====================================================================
+\section*{References}
+\todo{Data sources with links (README), legal source for the threshold of 450, course material.}
 
 \end{document}
