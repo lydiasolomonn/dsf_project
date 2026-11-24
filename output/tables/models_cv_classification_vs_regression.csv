@@ -1,0 +1,7 @@
+regression model,regression (%),logistic (%),difference,± SE,logistic better in,AUC regression
+"Linear regression, reference",54.0,54.5,0.4,1.6,1 of 5 folds,0.684
+"Linear regression, no expert rule",53.6,54.5,0.9,1.1,2 of 5 folds,0.686
+"Ridge, reference",54.5,54.5,0.0,3.7,2 of 5 folds,0.669
+"Ridge, no expert rule",53.6,54.5,0.9,1.1,2 of 5 folds,0.686
+"Lasso, reference",54.0,54.5,0.4,1.6,1 of 5 folds,0.684
+"Lasso, no expert rule",54.0,54.5,0.4,3.4,2 of 5 folds,0.664
