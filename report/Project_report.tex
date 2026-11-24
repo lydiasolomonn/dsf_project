@@ -7,8 +7,8 @@
 % - Write only in your own sections, so we avoid merge conflicts.
 % - The grey "TODO" lists say what goes in, and where to find it in the repo.
 %   Delete each TODO list when your section is written.
-% - Figures: save them as PNG in output/figures/ and include them with
-%   \includegraphics[width=0.8\textwidth]{output/figures/<name>.png}
+% - Figures: save them as PNG in output/figures/ and include them with (this file is in report/)
+%   \includegraphics[width=0.8\textwidth]{../output/figures/<name>.png}
 % - Numbers: copy them from output/tables/ (never type them from memory),
 %   so that report, slides and code agree (task 34).
 % - Report houses first, all buildings next to them (feedback point 1).
@@ -58,9 +58,9 @@
 \subsection{Target and cleaning}
 \todo{
 \begin{itemize}
-  \item Target: latest 3-year average from 2023 on (task 6); year effect (task 10, \texttt{output/year\_effect.png}).
+  \item Target: latest 3-year average from 2023 on (task 6); year effect (task 10, \texttt{output/figures/preprocess\_year\_effect.png}).
   \item Cleaning rule fixed before the test set: keep 50--1,500 MJ/m\textsuperscript{2} (README decision 2).
-  \item Merge loss 21,206 $\to$ 14,827 buildings, of which houses (task 7, \texttt{output/merge\_loss.csv}): small table.
+  \item Merge loss 21,206 $\to$ 14,827 buildings, of which houses (task 7, \texttt{output/tables/preprocess\_merge\_loss.csv}): small table.
 \end{itemize}}
 
 \subsection{Features and the dates of the heating information}
@@ -103,7 +103,7 @@ tasks 19--20).}
 
 \subsection{Classification variant}
 \todo{Logistic regression on ``above 450 or not''; same folds, features and selection measure; C chosen by
-cross-validation; deck 12 measures (task 21, \texttt{code/02b\_classify.ipynb}).}
+cross-validation; deck 12 measures (task 21, \texttt{code/04\_models.ipynb}, section 6).}
 
 % =====================================================================
 \section{Results in cross-validation}
@@ -111,11 +111,11 @@ cross-validation; deck 12 measures (task 21, \texttt{code/02b\_classify.ipynb}).
 
 \subsection{Model comparison}
 \todo{Table: baselines and all models, houses first, all buildings next to them; mean $\pm$ SE
-(\texttt{output/tables/task18\_baselines.csv}, \texttt{task20\_chosen.csv}). One figure (task 29).}
+(\texttt{output/tables/models\_cv\_summary.csv}). One figure (task 29).}
 
 \subsection{Classification versus regression}
 \todo{Logistic regression 54.5\% vs.\ regression models 53.6--54.5\%; all differences below one SE; confusion matrix
-and precision/recall in one sentence (\texttt{output/tables/task21\_*.csv}).}
+and precision/recall in one sentence (\texttt{code/04\_models.ipynb}, section 6; \texttt{output/tables/models\_cv\_classification\_vs\_regression.csv}).}
 
 \subsection{Feature sets}
 \todo{With and without heating information and municipality (task 22).}
