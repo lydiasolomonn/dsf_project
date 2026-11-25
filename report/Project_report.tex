@@ -192,7 +192,17 @@ and precision/recall in one sentence (\texttt{code/04\_models.ipynb}, section 6;
 feedback point 5).}
 
 \subsection{Error analysis}
-\todo{Errors by building class and construction period; plausibility of the predictions (task 24).}
+Where does the model go wrong? We look at its cross-validation predictions, where each
+house is predicted by a model that never saw it, and ask three questions.
+
+\textbf{How far off are the predictions?} The model plays it safe: it rarely predicts very low or very high values. A house with a true index below 250 is predicted on average
+162 too high, and a house above 700 on average 323.6 too low. Near the threshold of 450 the errors are much smaller. This is why the average error is large (MAE 104.8 MJ/m\textsuperscript{2} per year).
+For the office, this has two consequences. First, the predicted index of a single house is not reliable: a house predicted at 500 may really be at 800. Second, the ranking still works, because a house with a high true value usually still gets a higher prediction than a house with a low true value. The model is poor at saying \emph{how high} a value is, but good enough at saying \emph{which house comes first}, and the list only needs the second.
+
+\textbf{Which houses end up on the list?} The office would contact the 20\% of houses with the highest predictions (235 of 1,171 houses). A house on this list is a \emph{hit} if it is really above 450, and a \emph{false alarm} if not: 127 are hits and 108 are false alarms. Two features dominate the list. Oil-heated houses make up only a third of all houses (32\%), but 67.7\% of the hits and 74.1\% of the false alarms. Houses built
+between 1946 and 1980 make up 70\% of the hits and 76.9\% of the false alarms. The problem houses that the list misses look different: two thirds of them (64.8\%) heat with gas, and a quarter (26.4\%) were built before 1919. Many false alarms are close calls: 56 of the 108 have a true value between 400 and 450, just below the threshold.
+
+\textbf{Why are some errors so large?} The biggest errors are things the register cannot see: very high values in small houses (possibly a wrong floor area in the heating file) and very low values in old houses (probably renovated). The register has no information on renovations, which limits any model built on it.
 
 % =====================================================================
 \section{Limitations and conclusion}
