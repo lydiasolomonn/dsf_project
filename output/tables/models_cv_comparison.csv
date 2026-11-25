@@ -16,3 +16,4 @@ task,variant,compared with,difference (points),± SE,better in,worse in
 22,"Lasso, no heating, no municipality","Lasso, reference",-0.9,4.2,2 of 5 folds,3 of 5 folds
 23,"Linear regression, houses only","Linear regression, reference",3.8,3.4,3 of 5 folds,2 of 5 folds
 23,"Ridge, houses only","Ridge, reference",6.0,2.4,4 of 5 folds,1 of 5 folds
+tree,"Gradient boosting, houses only","Gradient boosting, reference",-2.6,3.0,1 of 5 folds,4 of 5 folds
