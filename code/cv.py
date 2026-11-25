@@ -1,5 +1,5 @@
 ## cv
-## Cross-validation on the 5 folds from 03_split_pipeline (task 16), scored with the shared metrics (task 17).
+## Cross-validation on the 5 folds from 02_split_pipeline (task 16), scored with the shared metrics (task 17).
 ## Every model is fitted on all buildings of the training folds and judged on the houses of the
 ## validation fold (feedback point 1). Used for all model variants in 04_models.ipynb (tasks 18, 20-23).
 
