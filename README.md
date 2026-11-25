@@ -5,7 +5,7 @@ Do not edit them; all cleaning happens in the notebooks in `code/`.
 
 | File | Dataset | Publisher | Used for | Source |
 |---|---|---|---|---|
-| SCANE_INDICE_MOYENNES_3_ANS.csv | IDC des bâtiments | Canton of Geneva (SITG) | Target (INDICE_MOY3) | https://ckan.opendata.swiss/perma/SCANE_INDICE_MOYENNES_3_ANS@canton-geneve |
+| SCANE_INDICE_MOYENNES_3_ANS.csv.gz (gzip, read directly by pandas) | IDC des bâtiments | Canton of Geneva (SITG) | Target (INDICE_MOY3) | https://ckan.opendata.swiss/perma/SCANE_INDICE_MOYENNES_3_ANS@canton-geneve |
 | gebaeude_batiment_edificio.csv | Federal Register of Buildings and Dwellings (GWR), canton GE | Federal Statistical Office | Features | https://www.housing-stat.ch/__publicdata |
 | kodes_codes_codici.csv | GWR code list | Federal Statistical Office | Readable labels for the codes | https://www.housing-stat.ch/__publicdata |
 | SCANE_RELATION_BATI_CHAUDIERE.csv | Bâtiments et chaudières centrales | Canton of Geneva (SITG) | Groups for the split | https://sitg.ge.ch/donnees/scane-relation-bati-chaudiere |
@@ -91,3 +91,17 @@ All models run in `code/04_models.ipynb` with the cross-validation in `code/cv.p
 Computed in `code/04_models.ipynb` (section 7) with the switches of `build_pipeline` (`heating`, `municipality`, `expert_rule`).
 
 16. Feature sets: We compare five sets: full (as in task 20), full without the expert rule, without municipality, without heating information (energy group and heating system; the expert rule then drops out too, because it needs the energy group), and without both. Everything else is as in task 20: same folds, trained on all buildings, scored on houses, linear regression, ridge and lasso with the same alpha values. Alpha is chosen again for every feature set with the rule of decision 14, so that no set is held back by a penalty tuned for another one. Each set is compared with the full set fold by fold, on the same houses. Reason: the register shows today's heating, which we cannot check for undeclared houses (lecturer's feedback point 2), so we want to know how much the ranking depends on it.
+### Extra model: gradient boosting (fixed 25 Nov 2026)
+17. Gradient boosting (extra check): a tree model that finds interactions (e.g. construction period × energy
+source × size) by itself. We test whether it finds more in the register than our linear models. Same pipeline,
+folds and selection measure as ridge; we tune the number of leaves per tree (7, 15, 31), with learning rate 0.05,
+300 trees and early stopping off (it would make the result depend on a random hold-out).
+18. Result: it ranks houses well (61.7% trained on all buildings, 59.1% on houses only; expert rule 45.1%,
+random 38%), but not better than ridge trained on houses only: +1.3 ± 2.9 and −1.3 ± 3.1 points fold by fold,
+each winning only 3 of 5 folds. The limit is the information in the register, not the flexibility of the model.
+
+### Final model choice (task 26, fixed 25 Nov 2026)
+19. Final model: ridge trained on houses only (alpha = 31.6). Its mean is only slightly lower than that of gradient
+boosting trained on all buildings (60.4% vs. 61.7%), and the difference is within one standard error (+1.3 ± 2.9
+points). We choose ridge because it is simpler and easier to understand: each prediction is a sum of effects of the
+register characteristics, while gradient boosting combines hundreds of trees. 

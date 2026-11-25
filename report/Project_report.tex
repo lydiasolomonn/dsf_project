@@ -8,7 +8,7 @@
 % - The grey "TODO" lists say what goes in, and where to find it in the repo.
 %   Delete each TODO list when your section is written.
 % - Figures: save them as PNG in output/figures/ and include them with (this file is in report/)
-%   \includegraphics[width=0.8\textwidth]{../output/figures/<name>.png}
+%   \includegraphics[width=0.8\textwidth]{<name>.png}   (path set by \graphicspath)
 % - Numbers: copy them from output/tables/ (never type them from memory),
 %   so that report, slides and code agree (task 34).
 % - Report houses first, all buildings next to them (feedback point 1).
@@ -19,6 +19,8 @@
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
 \usepackage{graphicx}
+% Figures: works locally (compiled inside report/) and on Overleaf (compiled from repo root)
+\graphicspath{{../output/figures/}{output/figures/}}
 \usepackage{booktabs}
 \usepackage{xcolor}
 \usepackage{hyperref}
