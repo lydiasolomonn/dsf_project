@@ -55,26 +55,28 @@
 \owner{Person 1 (2.1, 2.2), Person 2 (2.3), Person 5 (2.4, 2.5)}{1 page}
 
 \subsection{Sources}
-There is five public files, all linked by the federal building number (EGID). Three come from the
-Canton of Geneva (SITG): the yearly heating index (\texttt{SCANE\_INDICE\_MOYENNES\_3\_ANS}), the
-declaration status of each building (\texttt{OCEN\_ETAT\_IDC\_PUBLIC}) and the list of buildings
-that share a central boiler (\texttt{SCANE\_RELATION\_BATI\_CHAUDIERE}). Two come from the Federal
-Statistical Office: the Federal Register of Buildings and Dwellings (GWR) for the canton of Geneva
-(\texttt{gebaeude\_batiment\_edificio}) and its code list (\texttt{kodes\_codes\_codici}). All
-files were downloaded on 13 November 2026; the links are in the README.
+There are five public files, all linked by the federal building number (EGID). Three come
+from the Canton of Geneva (SITG): the yearly heating index \cite{idc}, the declaration
+status of each building \cite{status} and the list of buildings that share a central
+boiler \cite{boilers}. Two come from the Federal Statistical Office: the Federal Register
+of Buildings and Dwellings (GWR) for the canton of Geneva and its code list \cite{gwr}. All files were downloaded on 13 November 2026.
 
 \subsection{Target and cleaning}
 The heating file has one row per building and year. A building's values in
-different years are almost the same, so with several years the model could see one year in training and copy the
-answer for another year in the test set. Therefore we keep one value per building: its latest 3-year average because thats how the  ending in 2023
-or later. We keep these because Geneva's thresholds are based on that 3-year average and a later cutoff would cost about a third of our houses. 
+different years are almost the same, so with several years per building the model
+could see one year in training and copy the answer for another year in the test set.
+We therefore keep one value per building: its latest 3-year average ending in 2023
+or later. We use the 3-year average because the legal threshold of
+450~MJ/m\textsuperscript{2} per year applies to it \cite{ren}, and we start in 2023
+because older averages may describe buildings before renovations or heating changes, while a later start would cost about a third of our houses.
 
-\textbf{Implausible values:} we keep 50--1,500 MJ/m\textsuperscript{2} per year; lower values point to a
+
+\textbf{Implausible values}: We keep 50--1,500 MJ/m\textsuperscript{2} per year; lower values point to a
 wrong floor area, higher ones to data errors (25 buildings removed).
 
-\textbf{Houses definition}: We define houses as buildings with one or two dwellings in the register (GKLAS 1110 and 1121), because the register is the only source that also covers the undeclared houses our model is meant for. This definition covers 95\% of the target group (21,906 of the 23,123 residential buildings with fewer than 5 heat consumers).
+\textbf{Houses definition}: We define houses as buildings with one or two dwellings in the register (GKLAS 1110 and 1121), because the register is the only source that also covers the undeclared houses our model is meant for. This definition covers 95\% of the target group (21,906 of the 23,123 residential buildings with fewer than 5 heat consumers). As a check, 74\% of our houses (1,133 of 1,531) are also listed as houses in the heating file, and the houses on which the two sources disagree have a similar median index (406.5 vs.\ 415).
 
-\textbf{Year effect}: Index values fall over time: for the same buildings, the median fell by 43 between the periods ending in 2023 and 2026, so our older targets may be slightly too high. For houses there is no clear trend.Keeping only periods ending in 2025 would cost us about 450 of our 1,531 houses, so we keep all periods from 2023 on.
+\textbf{Year effect}: Index values fall over time: for the same buildings, the median fell by 43 between the periods ending in 2023 and 2026, so our older targets may be slightly too high. For houses there is no clear trend. Keeping only periods ending in 2025 would cost us about 450 of our 1,531 houses, so we keep all periods from 2023 on.
 
 Table~\ref{tab:mergeloss} shows what each step removes. The heating checks are explained in Section~2.3.
 
@@ -95,6 +97,7 @@ Same energy source today (final data)       & 14,827 & 1,366 \\
 \caption{From the heating file to the modelling table (\texttt{output/tables/preprocess\_merge\_loss.csv}).}
 \label{tab:mergeloss}
 \end{table}
+
 
 \subsection{Features and the dates of the heating information}
 \textbf{Features} come only from the building register, the one source that also covers undeclared houses:
@@ -206,7 +209,7 @@ and precision/recall in one sentence (\texttt{code/04\_models.ipynb}, section 6;
 \todo{With and without heating information and municipality (task 22).}
 
 \subsection{Trained on houses only versus all buildings}
-Only about 9\% of our buildings are houses (1366 houses out of 14827 buildings). The question is does a model that learns only from houses rank them better? Version A learns from all buildings of the four training folds (about 10165-10169), version B only from their houses (about 937-936). Both are judged on the same validation houses. For ridge, each version gets its own alpha because the best amount of shrinkage depends on how much data the model learns from, so we tune each one separately in cross-validation to compare both at their best setting.
+Only about 9\% of our buildings are houses (1366 houses out of 14827 buildings). The question is: does a model that learns only from houses rank them better? Version A learns from all buildings of the four training folds (about 10165--10169), version B only from their houses (about 936--937). Both are judged on the same validation houses. For ridge, each version gets its own alpha because the best amount of shrinkage depends on how much data the model learns from, so we tune each one separately in cross-validation to compare both at their best setting.
 
 \begin{table}[ht]
 \centering\small
@@ -224,9 +227,8 @@ Ridge             & A: all buildings & 54.5 & 106.7 & \\
 \label{tab:housesonly}
 \end{table}
 
-Learning from houses only puts more problem houses on the list: When the model learns only from houses, about 57.9--60 of every 100 contacted owners really are above 450, compared with about 54 when it learns from all buildings(Table~\ref{tab:housesonly}). The evidence is moderate. For linear regression the gain is small and could be chance: $+3.8$ points on average ($\pm 3.4$ standard error), better in only 3 of 5 folds. For ridge it is more convincing:
-$+6.0$ points ($\pm 2.4$ standard error), better in 4 of 5 folds. The MAE gets slightly worse, so learning
-from houses only does not predict the exact values better, but it puts the houses in a
+Learning from houses only puts more problem houses on the list: When the model learns only from houses, about 57.9--60 of every 100 contacted owners really are above 450, compared with about 54--54.5 when it learns from all buildings(Table~\ref{tab:housesonly}). The evidence is moderate. For linear regression the gain is small and could be chance: $+3.8$ points on average ($\pm 3.4$ standard error), better in only 3 of 5 folds. For ridge it is more convincing:
+$+6.0$ points ($\pm 2.4$ standard error), better in 4 of 5 folds. In the top 10\% the gap is even larger (ridge 54.4\% vs.\ 43.1\%, linear regression 58.8\% vs.\ 49.2\%), but these numbers are less reliable: each validation fold has about 234 houses, so the top 10\% holds only about 23 of them. The MAE gets slightly worse, so learning from houses only does not predict the exact values better, but it puts the houses in a
 better order, which is what matters for the list. Houses seem to be different enough from
 other buildings to justify their own model, even though it learns from about 11 times fewer
 rows. One caveat: alpha was chosen on the same folds, so the ridge result is slightly too
@@ -319,7 +321,35 @@ St. Gallen, November 29th, 2026
 
 
 % =====================================================================
-\section*{References}
+\begin{thebibliography}{9}
+
+
+\bibitem{ren} République et canton de Genève, Règlement d'application de la loi sur
+l'énergie (REn), rsGE L 2 30.01, art.~14 al.~1, as amended on 13 April 2022.
+\url{https://silgeneve.ch/legis/data/rsg_l2_30p01.htm}
+
+\bibitem{idc} Canton of Geneva (SITG), IDC des bâtiments
+(\texttt{SCANE\_INDICE\_MOYENNES\_3\_ANS}). Downloaded on 13 November 2026.
+\url{https://ckan.opendata.swiss/perma/SCANE_INDICE_MOYENNES_3_ANS@canton-geneve}
+
+\bibitem{status} Canton of Geneva (SITG), Declaration status per building
+(\texttt{OCEN\_ETAT\_IDC\_PUBLIC}). Downloaded on 13 November 2026.
+\url{https://ckan.opendata.swiss/en/perma/OCEN_ETAT_IDC_PUBLIC@canton-geneve}
+
+\bibitem{boilers} Canton of Geneva (SITG), Bâtiments et chaudières centrales
+(\texttt{SCANE\_RELATION\_BATI\_CHAUDIERE}). Downloaded on 13 November 2026.
+\url{https://sitg.ge.ch/donnees/scane-relation-bati-chaudiere}
+
+\bibitem{gwr} Federal Statistical Office (FSO), Federal Register of Buildings and
+Dwellings (GWR), canton of Geneva, with code list
+(\texttt{gebaeude\_batiment\_edificio}, \texttt{kodes\_codes\_codici}).
+Downloaded on 13 November 2026. \url{https://www.housing-stat.ch/__publicdata}
+
+\bibitem{ren} République et canton de Genève, Règlement d'application de la loi sur
+l'énergie (REn), rsGE L 2 30.01, art.~14 al.~1, as amended on 13 April 2022.
+\url{https://silgeneve.ch/legis/data/rsg_l2_30p01.htm}
+
+\end{thebibliography}
 
 
 \end{document}
