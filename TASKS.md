@@ -58,8 +58,8 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 23 | Experiment: trained on houses only versus trained on all, measured on the same houses in cross-validation | Person 1 | Person 4 | 24 Nov | Open | 1 |
 | 24 | Error analysis: errors by building class and construction period, check predictions for plausibility | Person 2 | Person 5 | 24 Nov | Open | |
 | 25 | Coaching on 25 Nov, 18:15: show the cross-validation results and bring one result you do not trust | All | | 25 Nov | Open | |
-| 26 | Choose the model by the cross-validation on houses, evaluate exactly once on the test set. Report houses first, all buildings beside them | Person 3 | Person 4 | 25 Nov | Open | 1 |
-| 27 | Hit-rate curve on test houses for several list lengths, with the number of owners each length means | Person 3 | Person 5 | 26 Nov | Open | 5 |
+| 26 | Choose the model by the cross-validation on houses, evaluate exactly once on the test set. Report houses first, all buildings beside them | Person 3 | Person 4 | 25 Nov | done, needs to be reviewed | 1 |
+| 27 | Hit-rate curve on test houses for several list lengths, with the number of owners each length means | Person 3 | Person 5 | 26 Nov | done, needs to be reviewed | 5 |
 
 ## Phase 4: Submission
 
