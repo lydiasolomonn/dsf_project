@@ -40,9 +40,9 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 10 | Check the year effect: median heating index per year. Decide whether a fixed reference period is needed | Person 1 | Person 4 | 20 Nov | Done, for review | |
 | 11 | Build the groups for the split: boiler file plus twins with the same year, value and floor area | Person 2 | Person 3 | 20 Nov | Done, for review | 1 |
 | 12 | Merge target and features, check the row count, add a flag for houses (one or two dwellings) as the evaluation group | Person 2 | Person 1 | 21 Nov | Done | 1 |
-| 13 | Define the target group: houses without a value and with status "fewer than 5 heat consumers". Exclude densification zones and new buildings | Person 5 | Person 2 | 20 Nov | Open | |
-| 14 | Compare declared and undeclared houses on the register characteristics, and write what the differences mean for the result | Person 5 | Person 1 | 21 Nov | Open | 1 |
-| 15 | Descriptive analysis: distribution of the target, by building class and construction period | Person 5 | Person 1 | 21 Nov | Open | |
+| 13 | Define the target group: houses without a value and with status "fewer than 5 heat consumers". Exclude densification zones and new buildings | Person 5 | Person 2 | 20 Nov | Done, needs review | |
+| 14 | Compare declared and undeclared houses on the register characteristics, and write what the differences mean for the result | Person 5 | Person 1 | 21 Nov | Done, need review | 1 |
+| 15 | Descriptive analysis: distribution of the target, by building class and construction period | Person 5 | Person 1 | 21 Nov | Done, needs review | |
 
 ## Phase 3: Model
 
