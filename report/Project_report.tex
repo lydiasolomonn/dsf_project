@@ -55,15 +55,46 @@
 \owner{Person 1 (2.1, 2.2), Person 2 (2.3), Person 5 (2.4, 2.5)}{1 page}
 
 \subsection{Sources}
-\todo{The five raw files, publishers and download date (README, ``Data'' table). Merged on EGID.}
+There is five public files, all linked by the federal building number (EGID). Three come from the
+Canton of Geneva (SITG): the yearly heating index (\texttt{SCANE\_INDICE\_MOYENNES\_3\_ANS}), the
+declaration status of each building (\texttt{OCEN\_ETAT\_IDC\_PUBLIC}) and the list of buildings
+that share a central boiler (\texttt{SCANE\_RELATION\_BATI\_CHAUDIERE}). Two come from the Federal
+Statistical Office: the Federal Register of Buildings and Dwellings (GWR) for the canton of Geneva
+(\texttt{gebaeude\_batiment\_edificio}) and its code list (\texttt{kodes\_codes\_codici}). All
+files were downloaded on 13 November 2026; the links are in the README.
 
 \subsection{Target and cleaning}
-\todo{
-\begin{itemize}
-  \item Target: latest 3-year average from 2023 on (task 6); year effect (task 10, \texttt{output/figures/preprocess\_year\_effect.png}).
-  \item Cleaning rule fixed before the test set: keep 50--1,500 MJ/m\textsuperscript{2} (README decision 2).
-  \item Merge loss 21,206 $\to$ 14,827 buildings, of which houses (task 7, \texttt{output/tables/preprocess\_merge\_loss.csv}): small table.
-\end{itemize}}
+The heating file has one row per building and year. A building's values in
+different years are almost the same, so with several years the model could see one year in training and copy the
+answer for another year in the test set. Therefore we keep one value per building: its latest 3-year average because thats how the  ending in 2023
+or later. We keep these because Geneva's thresholds are based on that 3-year average and a later cutoff would cost about a third of our houses. 
+
+\textbf{Implausible values:} we keep 50--1,500 MJ/m\textsuperscript{2} per year; lower values point to a
+wrong floor area, higher ones to data errors (25 buildings removed).
+
+\textbf{Houses definition}: We define houses as buildings with one or two dwellings in the register (GKLAS 1110 and 1121), because the register is the only source that also covers the undeclared houses our model is meant for. This definition covers 95\% of the target group (21,906 of the 23,123 residential buildings with fewer than 5 heat consumers).
+
+\textbf{Year effect}: Index values fall over time: for the same buildings, the median fell by 43 between the periods ending in 2023 and 2026, so our older targets may be slightly too high. For houses there is no clear trend.Keeping only periods ending in 2025 would cost us about 450 of our 1,531 houses, so we keep all periods from 2023 on.
+
+Table~\ref{tab:mergeloss} shows what each step removes. The heating checks are explained in Section~2.3.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+Step & Buildings & Houses \\
+\midrule
+All buildings in the heating file           & 21,206 & 3,879 \\
+3-year average ending in 2023 or later      & 16,587 & 1,532 \\
+Plausible value (50--1,500)                 & 16,562 & 1,531 \\
+In the register and still existing          & 16,452 & 1,531 \\
+Same energy source in all 3 target years    & 15,755 & 1,466 \\
+Same energy source today (final data)       & 14,827 & 1,366 \\
+\bottomrule
+\end{tabular}
+\caption{From the heating file to the modelling table (\texttt{output/tables/preprocess\_merge\_loss.csv}).}
+\label{tab:mergeloss}
+\end{table}
 
 \subsection{Features and the dates of the heating information}
 \textbf{Features} come only from the building register, the one source that also covers undeclared houses:
@@ -175,7 +206,31 @@ and precision/recall in one sentence (\texttt{code/04\_models.ipynb}, section 6;
 \todo{With and without heating information and municipality (task 22).}
 
 \subsection{Trained on houses only versus all buildings}
-\todo{Same houses, spread across folds (task 23).}
+Only about 9\% of our buildings are houses (1366 houses out of 14827 buildings). The question is does a model that learns only from houses rank them better? Version A learns from all buildings of the four training folds (about 10165-10169), version B only from their houses (about 937-936). Both are judged on the same validation houses. For ridge, each version gets its own alpha because the best amount of shrinkage depends on how much data the model learns from, so we tune each one separately in cross-validation to compare both at their best setting.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{llrrc}
+\toprule
+Model & Trained on & Top 20\%: above 450 (\%) & MAE & B better in \\
+\midrule
+Linear regression & A: all buildings & 54.0 & 104.8 & \\
+                  & B: houses only   & 57.9 & 108.3 & 3 of 5 folds \\
+Ridge             & A: all buildings & 54.5 & 106.7 & \\
+                  & B: houses only   & 60.4 & 107.1 & 4 of 5 folds \\
+\bottomrule
+\end{tabular}
+\caption{Houses only vs.\ all buildings, judged on houses in cross-validation.}
+\label{tab:housesonly}
+\end{table}
+
+Learning from houses only puts more problem houses on the list: When the model learns only from houses, about 57.9--60 of every 100 contacted owners really are above 450, compared with about 54 when it learns from all buildings(Table~\ref{tab:housesonly}). The evidence is moderate. For linear regression the gain is small and could be chance: $+3.8$ points on average ($\pm 3.4$ standard error), better in only 3 of 5 folds. For ridge it is more convincing:
+$+6.0$ points ($\pm 2.4$ standard error), better in 4 of 5 folds. The MAE gets slightly worse, so learning
+from houses only does not predict the exact values better, but it puts the houses in a
+better order, which is what matters for the list. Houses seem to be different enough from
+other buildings to justify their own model, even though it learns from about 11 times fewer
+rows. One caveat: alpha was chosen on the same folds, so the ridge result is slightly too
+optimistic. The final choice is made in Section~5.1.
 
 % =====================================================================
 \section{Final model and test result}
