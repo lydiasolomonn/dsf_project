@@ -105,3 +105,41 @@ each winning only 3 of 5 folds. The limit is the information in the register, no
 boosting trained on all buildings (60.4% vs. 61.7%), and the difference is within one standard error (+1.3 ± 2.9
 points). We choose ridge because it is simpler and easier to understand: each prediction is a sum of effects of the
 register characteristics, while gradient boosting combines hundreds of trees. 
+
+### Error analysis and non-linear floor area (fixed 25 Nov 2026)
+Computed in `code/04_models.ipynb` (sections 9 and 10), on the cross-validation predictions only; the test set is not used.
+
+20. Error analysis by feature: we take the out-of-fold predictions of the best candidate so far (ridge trained on houses only)
+and compute, for every category of a feature, the mean error (prediction − true value; positive = predicted too high) with a
+95% interval (± 1.96 · standard deviation / √n), for groups with at least 20 houses. A mean error outside the interval means the
+model misses something about this group; a dummy for it would shift its predictions by about that amount. Because we test many
+groups, we compare the number of such groups with the number expected by chance (5%). We also count how many houses of each
+group land on the contact list (top 20%) as hits or false alarms, or are missed, because an error only matters for us if it
+changes the list. Gradient boosting is shown next to ridge. The reference year (`ref_year`) is only shown, not used as a
+feature: undeclared houses have no reference year.
+21. Non-linear floor area: the only feature the error analysis flags with an effect on the list is the floor area (small houses
+predicted too high, medium ones too low). We therefore add exactly one variant, fixed before running it: ridge trained on houses
+only, with the floor area as a spline (log floor area, 5 knots at quantiles, degree 3, linear beyond the training range;
+not tuned, alpha chosen as in decision 14). It is compared fold by fold with ridge trained on houses only.
+Result: 60.9% vs. 60.4% (+0.4 ± 2.6 points, better in 2 of 5 folds). The chosen alpha (56,234) lies near the edge of the
+grid, where the predictions are pulled towards the average (MAE 116.3). With the same alpha as ridge on houses only (31.6),
+the spline removes the wave by floor area, but does not rank houses better (57.9%). The spline is kept as an experiment,
+not pursued and not a candidate for the final model.
+
+### Houses: lasso, house interactions and compactness (fixed 25 Nov 2026)
+Computed in `code/04_models.ipynb` (section 11). Houses behave differently from large buildings (task 23), so we add four
+variants that focus on houses. They are fixed before running them and are the only additions before the finalists are chosen;
+the finalists and the rule for choosing among them follow. Same folds, selection measure on houses, alpha as in decision 14;
+each is compared fold by fold with ridge trained on houses only.
+
+22. Lasso trained on houses only, with the same alpha values as lasso (0.001 to 100); it was missing in the houses-only family.
+23. House interactions: ridge trained on all buildings, with a house dummy and a copy "× house" of these columns: floor area,
+floors, construction period, energy group and the expert rule. The copy equals the column for houses and is 0 for all other
+buildings, so the model learns one effect from all buildings plus a deviation for houses. The penalty pulls every deviation
+towards 0, so houses keep their own effect only where the data show it; otherwise they share the effect of all buildings.
+This uses all buildings and still lets houses differ (between "all the same" and "houses only"). Municipality is not
+interacted (too few houses per municipality), nor dwellings and building class (for houses they only repeat "house").
+24. Compactness: two extra columns, 1 / floors and 1 / √floor area. `floor_area` is the building's footprint (GAREA), so the
+heated area is about footprint × floors. The heat a house loses per m² of heated area grows with its outer surface per m²:
+about 2 / floors (roof and floor slab) plus a term in 1 / √footprint (walls). Small, low houses have the most surface per m².
+The columns are added to the log features, both for ridge on houses only and for ridge with house interactions.

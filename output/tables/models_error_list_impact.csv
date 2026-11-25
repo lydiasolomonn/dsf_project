@@ -1,0 +1,11 @@
+feature,group,mean error,houses,on the list,hits,false alarms,missed
+all houses,,0.6,1171,235,142,93,303
+Energy group,heat pump,50.6,31,0,0,0,6
+Floor area (5 groups of equal size),31–69 m²,17.1,237,54,17,37,60
+Floor area (5 groups of equal size),91–114 m²,-19.1,230,35,29,6,75
+Floors,4+,35.9,92,2,0,2,23
+Municipality,6603,72.8,27,14,0,14,2
+Municipality,6607,38.9,51,4,1,3,8
+Construction period × energy group,Nach 2015 × other,-32.0,47,0,0,0,1
+Reference year (not in the model),2023,-51.3,138,34,30,4,42
+Reference year (not in the model),2026,23.1,262,47,21,26,65

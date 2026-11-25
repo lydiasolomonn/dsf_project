@@ -1,0 +1,5 @@
+variant,compared with,difference (points),± SE,better in,worse in,fold 0,fold 1,fold 2,fold 3,fold 4
+"Lasso, houses only","Ridge, houses only",-1.7,0.8,0 of 5 folds,3 of 5 folds,0.0,-4.3,0.0,-2.1,-2.1
+"Ridge, house interactions","Ridge, houses only",-2.1,2.3,2 of 5 folds,3 of 5 folds,-8.5,-4.3,2.1,-4.3,4.3
+"Ridge, houses only, compactness","Ridge, houses only",0.0,1.5,2 of 5 folds,2 of 5 folds,-4.3,0.0,2.1,4.3,-2.1
+"Ridge, house interactions, compactness","Ridge, houses only",-1.3,2.3,2 of 5 folds,3 of 5 folds,-6.4,-4.3,4.3,-4.3,4.3

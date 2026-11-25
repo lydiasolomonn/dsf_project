@@ -9,7 +9,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin, Transfo
 from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, StandardScaler
+from sklearn.preprocessing import FunctionTransformer, OneHotEncoder, SplineTransformer, StandardScaler
 
 from config import THRESHOLD
 
@@ -27,6 +27,12 @@ FEATURES = NUMERIC + CATEGORICAL + HEATING + MUNICIPALITY
 
 MIN_FREQUENCY = 20  # categories seen fewer than 20 times in training are merged into "infrequent"
 SMOOTHING = 20      # weight m of the overall mean in the expert rule (see ExpertRuleEncoder)
+SPLINE_KNOTS = 5    # knots of the floor-area spline (switch area_spline, README decision 21)
+
+# columns that get a copy "x house" with the switch house_interactions (README decision 23), by the start
+# of their name after preprocessing: floor area, floors, construction period, energy group, expert rule,
+# and the compactness columns ("inv_...") if they are switched on
+INTERACT_PREFIXES = ("floor_area", "floors", "construction_period_", "energy_group_", "expert_rule", "inv_")
 
 
 # ---------------------------------------------------------------------------
@@ -39,6 +45,9 @@ def split_xy(df):
     y = df["y"].to_numpy(dtype=float)
     is_house = df["house"].to_numpy(dtype=bool)
     groups = df["group_id"].to_numpy()
+    # the house flag is only used by the switch house_interactions (README decision 23); all other branches
+    # pick their columns by name and drop the rest, so every other model ignores it
+    X["house"] = is_house
     return X, y, is_house, groups
 
 
@@ -87,7 +96,7 @@ class ExpertRuleEncoder(BaseEstimator, TransformerMixin):
 
 
 # ---------------------------------------------------------------------------
-# D. The four branches
+# D. The branches
 # ---------------------------------------------------------------------------
 def _numeric_branch():
     # median from training only -> log against the very skewed areas -> same scale for ridge and lasso
@@ -96,6 +105,61 @@ def _numeric_branch():
         ("log", FunctionTransformer(np.log1p, feature_names_out="one-to-one")),
         ("scale", StandardScaler()),
     ])
+
+
+def _area_spline_branch():
+    # floor area as a curve instead of a straight line (README decision 21): after the log, a spline
+    # splits the area range at 5 knots (placed at quantiles, so each piece has about as many buildings)
+    # and fits a smooth cubic piece between them. Beyond the training range it continues as a straight line.
+    return Pipeline([
+        ("impute", SimpleImputer(strategy="median")),
+        ("log", FunctionTransformer(np.log1p, feature_names_out="one-to-one")),
+        ("spline", SplineTransformer(n_knots=SPLINE_KNOTS, degree=3, knots="quantile", extrapolation="linear")),
+        ("scale", StandardScaler()),
+    ])
+
+
+def _compactness(X):
+    # X: floor area (footprint) and floors, missing values already filled (array or table)
+    X = np.asarray(X, dtype=float)
+    area = np.maximum(X[:, 0], 1)
+    floors = np.maximum(X[:, 1], 1)
+    return np.column_stack([1 / np.sqrt(area), 1 / floors])
+
+
+def _compactness_branch():
+    # outer surface per m² of heated area (README decision 24): roof and floor slab give about 2 / floors,
+    # the walls a term in 1 / sqrt(footprint). Small, low houses have the most surface per m².
+    return Pipeline([
+        ("impute", SimpleImputer(strategy="median")),
+        ("compactness", FunctionTransformer(_compactness,
+                                            feature_names_out=lambda self, names: np.array(["inv_sqrt_floor_area", "inv_floors"]))),
+        ("scale", StandardScaler()),
+    ])
+
+
+class HouseInteractions(BaseEstimator, TransformerMixin):
+    """House interactions (README decision 23). Gets the named columns after preprocessing (a DataFrame with
+    a "house" column) and adds a copy "<column> x house" of every column whose name starts with one of the
+    prefixes: equal to the column for houses, 0 for all other buildings. The model then learns one effect
+    from all buildings plus a deviation for houses. Learns nothing itself (fit only stores the column names)."""
+
+    def __init__(self, prefixes=INTERACT_PREFIXES):
+        self.prefixes = prefixes
+
+    def fit(self, X, y=None):
+        self.columns_ = [c for c in X.columns if c.startswith(tuple(self.prefixes))]
+        self.feature_names_out_ = np.array(list(X.columns) + [f"{c} x house" for c in self.columns_])
+        return self
+
+    def transform(self, X):
+        house = X["house"].astype(float)
+        copies = X[self.columns_].mul(house, axis=0)
+        copies.columns = [f"{c} x house" for c in self.columns_]
+        return pd.concat([X.astype(float), copies], axis=1)
+
+    def get_feature_names_out(self, input_features=None):
+        return self.feature_names_out_
 
 
 def _one_hot():
@@ -116,35 +180,52 @@ def _expert_rule_branch(smoothing):
 # ---------------------------------------------------------------------------
 # E. Put the branches together
 # ---------------------------------------------------------------------------
-def build_preprocessor(expert_rule=True, heating=True, municipality=True, smoothing=SMOOTHING):
+def build_preprocessor(expert_rule=True, heating=True, municipality=True, smoothing=SMOOTHING,
+                       area_spline=False, compactness=False, house_interactions=False):
     """Switches for the feature sets (task 22):
     expert_rule=False  without the expert-rule column
     heating=False      without energy group and heating system; the expert rule is then also left out,
                        because it needs the energy group
     municipality=False without municipality
+    area_spline=True   floor area as a spline (a curve) instead of one straight line (README decision 21)
+    compactness=True   two extra columns, 1 / sqrt(floor area) and 1 / floors (README decision 24)
+    house_interactions=True  a house dummy plus a copy "x house" of the columns in INTERACT_PREFIXES (decision 23)
     """
     categorical = CATEGORICAL + (HEATING if heating else [])
+    numeric = [c for c in NUMERIC if not (area_spline and c == "floor_area")]
 
     branches = [
-        ("numeric", _numeric_branch(), NUMERIC),
+        ("numeric", _numeric_branch(), numeric),
         ("categorical", _one_hot(), categorical),
     ]
+    if area_spline:
+        branches.append(("area", _area_spline_branch(), ["floor_area"]))
     if municipality:
         branches.append(("municipality", _one_hot(), MUNICIPALITY))
     if expert_rule and heating:
         branches.append(("expert_rule", _expert_rule_branch(smoothing), RULE_COLUMNS))
+    if compactness:
+        branches.append(("compactness", _compactness_branch(), ["floor_area", "floors"]))
 
-    return ColumnTransformer(branches, remainder="drop", verbose_feature_names_out=False)
+    if not house_interactions:
+        return ColumnTransformer(branches, remainder="drop", verbose_feature_names_out=False)
+
+    branches.append(("house", "passthrough", ["house"]))
+    columns = ColumnTransformer(branches, remainder="drop", verbose_feature_names_out=False)
+    columns.set_output(transform="pandas")   # named columns, so HouseInteractions can find them
+    return Pipeline([("columns", columns), ("interactions", HouseInteractions())])
 
 
 # ---------------------------------------------------------------------------
 # F. Preprocessing + model
 # ---------------------------------------------------------------------------
-def build_pipeline(model, expert_rule=True, heating=True, municipality=True, smoothing=SMOOTHING):
+def build_pipeline(model, expert_rule=True, heating=True, municipality=True, smoothing=SMOOTHING,
+                   area_spline=False, compactness=False, house_interactions=False):
     # Returns an unfitted pipeline. Fit it on the training part of a fold only.
     # model: any sklearn model, e.g. LinearRegression(), Ridge(), Lasso(), LogisticRegression()
     return Pipeline([
-        ("prep", build_preprocessor(expert_rule, heating, municipality, smoothing)),
+        ("prep", build_preprocessor(expert_rule, heating, municipality, smoothing, area_spline,
+                                    compactness, house_interactions)),
         ("model", model),
     ])
 

@@ -6,8 +6,11 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from sklearn.linear_model import Lasso
 
-from metrics import evaluate
+from config import THRESHOLD
+from metrics import evaluate, _top_positions   # _top_positions: the same ranking and tie-break as the selection measure
 from pipeline import build_pipeline
 
 SELECTION = "share_above_top20"  # selection measure (README decision 1), scored on houses
@@ -157,7 +160,6 @@ def plot_lasso_path(X, y, alphas, n_show=8, path=None, **switches):
     """Fits lasso on all given buildings (training part only, no test set) for every alpha.
     Only descriptive: shows how many coefficients stay non-zero and the paths of the strongest ones.
     The expert-rule column is drawn thicker."""
-    from sklearn.linear_model import Lasso
 
     coefs = []
     names = None
@@ -217,3 +219,87 @@ def paired_difference(per_fold_a, per_fold_b, metric=SELECTION, group="houses"):
         "worse in": f"{(diff < 0).sum()} of {len(diff)} folds",
     }
     return diff, summary
+
+
+# ---------------------------------------------------------------------------
+# 8. Error analysis by feature (README decision 20)
+# ---------------------------------------------------------------------------
+def error_by_group(error, groups, min_n=20, compare=None):
+    """Mean error per category of a feature, e.g. per construction period.
+    error:   prediction - true value for every house (positive = predicted too high), out-of-fold
+    groups:  the category of every house (one array, or a DataFrame with several columns for combinations)
+    compare: optional errors of a second model for the same houses (e.g. gradient boosting), shown next to it
+    Returns one row per category with at least min_n houses:
+      n, mean error, ± 95% (1.96 * standard deviation / sqrt(n)), clear (0 lies outside the interval),
+      and the mean error of the second model."""
+    data = pd.DataFrame(groups).reset_index(drop=True)
+    keys = list(data.columns)
+    data["error"] = np.asarray(error, dtype=float)
+    if compare is not None:
+        data["compare"] = np.asarray(compare, dtype=float)
+    grouped = data.groupby(keys, observed=True)
+
+    table = grouped["error"].agg(n="size", mean_error="mean", sd="std")
+    table["ci"] = 1.96 * table["sd"] / np.sqrt(table["n"])
+    table["clear"] = table["mean_error"].abs() > table["ci"]   # the model is off for this group, more than chance
+    if compare is not None:
+        table["compare_mean_error"] = grouped["compare"].mean()
+    table = table[table["n"] >= min_n].drop(columns="sd")
+    return table.rename(columns={"mean_error": "mean error", "ci": "± 95%",
+                                 "compare_mean_error": "second model: mean error"}).round(1)
+
+
+def contact_list(score, y, folds, top=0.20, threshold=THRESHOLD):
+    """Rebuilds the office's list in every validation fold: the top 20% of the houses by score are contacted,
+    exactly as in the selection measure. Give it the houses only.
+    Returns one outcome per house: hit, false alarm, missed or correctly left out."""
+    score, y, folds = np.asarray(score, dtype=float), np.asarray(y, dtype=float), np.asarray(folds)
+    contacted = np.zeros(len(y), dtype=bool)
+    for k in np.unique(folds):
+        rows = np.flatnonzero(folds == k)
+        contacted[rows[_top_positions(score[rows], top)]] = True
+    above = y > threshold
+    return np.select([contacted & above, contacted & ~above, ~contacted & above],
+                     ["hit", "false alarm", "missed"], default="correctly left out")
+
+
+def plot_error_by_feature(tables, labels=("model", "second model"), ncols=3, path=None):
+    """Forest plot, one panel per feature. tables: dict title -> table from error_by_group.
+    Dot = mean error of the category, bar = 95% interval, vertical line = no error.
+    Filled dot: the model is clearly off for this group (0 outside the interval); open dot: within chance.
+    The second model (if given) is the small grey diamond."""
+    nrows = int(np.ceil(len(tables) / ncols))
+    heights = [max(len(t) for t in list(tables.values())[r * ncols:(r + 1) * ncols]) for r in range(nrows)]
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5 * ncols, 0.32 * sum(heights) + 1.2 * nrows),
+                             sharex=True, squeeze=False, gridspec_kw={"height_ratios": heights})
+    for ax, (title, t) in zip(axes.flat, tables.items()):
+        pos = np.arange(len(t))[::-1]   # first category at the top
+        ax.axvline(0, color="grey", linewidth=1)
+        ax.errorbar(t["mean error"], pos, xerr=t["± 95%"], fmt="none", ecolor="C0", elinewidth=1.2, capsize=2)
+        ax.scatter(t["mean error"], pos, s=36, zorder=3, edgecolor="C0", linewidth=1.2,
+                   facecolor=np.where(t["clear"], "C0", "white"))
+        if "second model: mean error" in t:
+            ax.scatter(t["second model: mean error"], pos + 0.25, marker="D", s=14, color="grey", zorder=2)
+        names = [" × ".join(map(str, i)) if isinstance(i, tuple) else str(i) for i in t.index]
+        ax.set_yticks(pos)
+        ax.set_yticklabels([f"{name} ({n})" for name, n in zip(names, t["n"])], fontsize=8)
+        ax.set_title(title, fontsize=10)
+
+    # x-axis labels under the lowest panel of every column (also when the panel below is empty)
+    for i, ax in enumerate(axes.flat):
+        if i >= len(tables):
+            ax.axis("off")
+        elif i + ncols >= len(tables):
+            ax.tick_params(labelbottom=True)
+            ax.set_xlabel("mean error (prediction − true value)")
+
+    handles = [Line2D([], [], marker="o", linestyle="", color="C0", label=f"{labels[0]}: clearly off (0 outside the 95% interval)"),
+               Line2D([], [], marker="o", linestyle="", markerfacecolor="white", color="C0", label=f"{labels[0]}: within chance")]
+    if any("second model: mean error" in t for t in tables.values()):
+        handles.append(Line2D([], [], marker="D", linestyle="", color="grey", markersize=4, label=labels[1]))
+    fig.legend(handles=handles, loc="upper center", ncol=3, fontsize=8,
+               bbox_to_anchor=(0.5, 1.0), frameon=False)
+    fig.tight_layout(rect=(0, 0, 1, 0.97))
+    if path is not None:
+        fig.savefig(path, dpi=150)
+    return fig
