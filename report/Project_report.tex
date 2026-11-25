@@ -66,13 +66,20 @@
 \end{itemize}}
 
 \subsection{Features and the dates of the heating information}
-\todo{
-\begin{itemize}
-  \item Register features (\texttt{pipeline.py}): floor area, floors, dwellings, construction period, building class,
-        energy group, heating system, municipality.
-  \item Heating changes after the target period: rule and counts (task 9, feedback point 2).
-  \item Columns excluded because they contain the answer (leakage).
-\end{itemize}}
+\textbf{Features} come only from the building register, the one source that also covers undeclared houses:
+construction period, building class, energy source (grouped into gas, oil, district heat, heat pump, wood, electric,
+other), heating system, footprint (floor) area, floors, dwellings and municipality. A missing category becomes ``unknown'';
+missing numbers are filled inside the pipeline with the median of the training folds only, so no information leaks
+from the validation or test data. The heated floor area is never a feature, because a building only has it once it
+has declared.
+
+\textbf{Heating changes: }The register shows \emph{today's} heating, but the target was measured
+in earlier years. If the heating changed, the features describe a different building than the one that produced the
+value. We drop two kinds of buildings: (1) 697 buildings (65 houses) whose energy source changed \emph{during} their
+three target years, so their value mixes two heating systems; (2) 928 buildings (100 houses) whose energy source
+today differs from the one in their target years.Some of these differences are hard to explain as real replacements (e.g.\ 142 buildings from gas to oil, the opposite of the usual direction) and may come from the two files recording the energy source differently. We did not verify this, and it does not change our decision: either way, features and target do not match. The register's update date could not help, because almost all heating entries carry a date in 2024 or 2025 and so do not separate changed from unchanged heating.
+
+\textbf{Groups for the split.} The heating index is calculated per heating installation, so buildings that share a boiler all receive exactly the same value. We also treat buildings with the same end year, value and heated floor area as ``twins'', since they probably share an installation that the boiler file does not list. If one such building were in training and its partner in the test set, the model could simply copy the answer. We therefore link these buildings into groups (3089 (21\%) of buildings share a group) and never split a group between training and test.
 
 \subsection{Descriptive analysis}
 \todo{Distribution of the target, by building class and construction period: 1--2 figures (task 15).
@@ -87,16 +94,43 @@ Share above 450: 38\% of houses, 29\% of all buildings.}
 \owner{Person 3 (3.1, 3.2), Person 4 (3.3), Person 5 (3.4)}{1 page}
 
 \subsection{Split and cross-validation}
-\todo{Test set 2,117 buildings (195 houses), locked until the end; 5 folds with boiler groups kept together and the
-same share of houses in every part (README decisions 9--10, task 16, feedback point 1).}
+We split the 14,827 buildings once, with a fixed random seed, and all models use this split.
+First, about one seventh of the data (2,117 buildings, 195 of them houses) was set aside as the
+test set. It stayed locked until the final evaluation in Section~5 and played no part in choosing
+features, models or tuning parameters. The remaining 12,710 buildings (1,171 houses) were split
+into five folds of about 2,540 buildings each. In every round of cross-validation, a model is
+trained on four folds and judged on the fifth. Two rules shaped the split, both applied with scikit-learn's \texttt{StratifiedGroupKFold}.
+\begin{enumerate}
+    \item Buildings that share a heating installation get the same declared value. If one of them were
+in training and the other in validation, the model could “predict” a building by copying its
+twin, and the scores would be too optimistic. We therefore linked buildings on the same
+boiler (boiler file) and “twins” with the same reference year, value and heated floor area
+into groups: 3,089 buildings (21\%) share a group with at least one other building, the
+largest group has 20. Every group lies entirely in one fold or in the test set.
+    \item  Second, houses are only 9.2\% of the data
+but are the group the office cares about, so every fold and the test set contain the same share of
+houses (9.2\%), about 234 per fold. The share of houses above 450~MJ/m\textsuperscript{2} was not
+balanced on purpose and varies between 35.9\% and 39.6\% across the parts.
+\end{enumerate}
 
 \subsection{Selection measure and baselines}
-\todo{
+
 \begin{itemize}
-  \item Selection measure: share of houses above 450 among the top 20\% of the ranking; why it fits the outreach
-        decision; MAE reported as an easy number (README decisions 1 and 3, feedback point 3).
-  \item Baselines: training mean and expert rule (construction period $\times$ energy source) (task 18, feedback point 4).
-\end{itemize}}
+  \item Selection measure: The office needs to know whose owners to contact first, so we judge models by the list they
+produce. In each validation fold we rank the houses by their prediction, take the top 20\%, and
+count the share that is really above 450~MJ/m\textsuperscript{2}: the \emph{hit rate}. We report
+its mean over the five folds with its standard error (SE), houses first and all buildings next to
+them; the same measure also chooses the penalty of ridge, lasso and logistic regression. With
+about 47 houses in each top 20\%, one house moves the hit rate by about two points, so differences
+smaller than one SE count as chance. As extras we report the hit rate in the top 10\% and the mean
+absolute error (MAE) in MJ/m\textsuperscript{2}.
+  \item Baselines: every model must beat two baselines, fitted on the training folds like the models.
+The \emph{training mean} gives every building the same value, so its list is random: its hit rate is
+about the share of houses above 450 (38.0\% in cross-validation). The \emph{expert rule} gives each
+building the mean index of its construction period $\times$ energy group in the training folds
+(an unseen combination gets the overall mean). This is what an energy expert could do without a
+statistical model, and the bar a model has to clear to be worth using.
+\end{itemize}
 
 \subsection{Preprocessing and regression models}
 \todo{Pipeline fitted on the training part of each fold; expert rule as one feature (target encoding);
@@ -106,6 +140,24 @@ tasks 19--20).}
 \subsection{Classification variant}
 \todo{Logistic regression on ``above 450 or not''; same folds, features and selection measure; C chosen by
 cross-validation; deck 12 measures (task 21, \texttt{code/04\_models.ipynb}, section 6).}
+
+\subsection{Extra check: a tree model}
+ To see whether the register holds more information than a linear model can use, we also fitted gradient
+boosting (\texttt{HistGradientBoostingRegressor}). It builds many small decision trees one after
+another, each correcting the errors of the previous ones, so it can find interactions such as
+``old, oil-heated and small'' by itself. It uses the same pipeline, folds and selection measure as
+the other models. The tree size (7, 15 or 31 leaves) was chosen like $\alpha$; the learning rate was
+fixed at 0.05 with 300 trees, and early stopping was switched off, because it would make the result
+depend on a random hold-out.
+
+Trained on all buildings, gradient boosting reaches the highest hit rate on houses of all variants,
+61.7\%~$\pm$~4.4 (ridge on all buildings: 54.5\%), and the lowest MAE (102.2 on houses, 72.2 on all
+buildings). Trained on houses only, it reaches 59.1\%~$\pm$~4.1. Compared fold by fold with ridge
+trained on houses only (60.4\%), the difference is small and uncertain: $+1.3 \pm 2.9$ and
+$-1.3 \pm 3.1$ points. A flexible model therefore ranks houses about as well as a linear model that
+learns from houses only. Most of the gain over the linear models trained on all buildings seems to
+come from treating houses differently from other buildings, which the tree model does by itself and
+ridge does by learning from houses only.
 
 % =====================================================================
 \section{Results in cross-validation}
