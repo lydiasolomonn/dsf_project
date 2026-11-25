@@ -18,7 +18,7 @@ All files are linked by the federal building number (EGID).
 (`nbformat` is needed to run notebooks with `%run`; the first cell of `00_main.ipynb` installs it).
 
 **Run:** open `code/00_main.ipynb`, select the kernel and choose **Run All**. It runs the notebooks of the five steps
-in order (about 5 minutes, most of it `04_models.ipynb`). Every notebook can also be run on its own once the
+in order (about 11 minutes, most of it `04_models.ipynb` and `04b_model_choice.ipynb`). Every notebook can also be run on its own once the
 notebooks before it have written their files. Paths come from `config.py`, so the working directory does not matter.
 All notebooks and modules take the seed from `config.py` (decision 15).
 
@@ -29,6 +29,7 @@ All notebooks and modules take the seed from `config.py` (decision 15).
 | 2 Explore | `02_describe.ipynb` | target group, declared vs. undeclared houses, descriptive analysis (tasks 13–15) | `output/*/describe_*` |
 | 3 Split & pipeline | `03_split_pipeline.ipynb` | test set and folds (task 16); checks of the metric functions, the expert rule and the pipeline (tasks 17, 19) | `data/processed/cv.csv`, `data/processed/test.csv` |
 | 4 Models | `04_models.ipynb` | all model variants in cross-validation, trained once and compared: baselines (18), linear regression, ridge, lasso (20), classification (21), feature sets (22), houses only (23) | `output/tables/models_*.csv`, `output/figures/models_*.png` |
+| 4b Model choice | `04b_model_choice.ipynb` | the model race: four candidates on five different splits of the cross-validation data, choice of the final model and its setting (decisions 25–27); later section 1 of `05_evaluation.ipynb` | `output/tables/choice_*.csv`, `output/figures/choice_race.png` |
 | 5 Evaluation | `05_evaluation.ipynb` | choice of the final model, error analysis (24), test set (26), hit-rate curve (27) | `output/tables/evaluation_*.csv`, `output/figures/evaluation_*.png` |
 | shared | `config.py` | seed, threshold, paths, `load_cv()` and `load_test()` | – |
 | shared | `pipeline.py` | preprocessing pipeline, classification wrapper and expert-rule baseline used by all models | – |
@@ -143,3 +144,26 @@ interacted (too few houses per municipality), nor dwellings and building class (
 heated area is about footprint × floors. The heat a house loses per m² of heated area grows with its outer surface per m²:
 about 2 / floors (roof and floor slab) plus a term in 1 / √footprint (walls). Small, low houses have the most surface per m².
 The columns are added to the log features, both for ridge on houses only and for ridge with house interactions.
+
+### Model choice: repeated cross-validation (fixed 25 Nov 2026)
+Computed in `code/04b_model_choice.ipynb`, on the cross-validation data only; the test set is not used. Several variants lie within
+the noise of one split (standard error about 3 points, about 47 houses in the top 20% of a fold), and the more variants we compare,
+the more optimistic the best value is. So a small list of candidates, fixed here before the run, competes on five different splits.
+This replaces decision 19 once the race and the coaching are done.
+
+25. Candidates: (1) ridge trained on houses only, (2) the same with compactness, (3) ridge with house interactions and compactness,
+(4) gradient boosting trained on all buildings, the better of the two tree variants in `04_models.ipynb` (61.7% vs. 59.1%), with its
+settings unchanged (learning rate 0.05, 300 trees, early stopping off, number of leaves 7, 15 or 31). Not in the race: lasso on houses
+only (better than ridge in 0 of 5 folds), linear regression on houses only (ridge with alpha close to 0, so already covered), the
+spline (decision 21), the linear models trained on all buildings (about 6 points behind), and logistic regression on houses only
+(57.4%, −3.0 ± 1.1 points against ridge on houses only, better in 0 of 5 folds; in `04_models.ipynb`). The two baselines run along as
+references, not as candidates.
+26. Five runs: run 1 uses the folds of `cv.csv`; runs 2–5 split the same 12,710 buildings again into 5 folds with the seeds 43–46
+(project seed + 1 to + 4), with the same rules as in decision 9 (`StratifiedGroupKFold`, groups together, same share of houses).
+In every run each candidate is tuned again (alpha or number of leaves, decision 14), so no setting is learned on another run's folds.
+27. Rule: the leader is the candidate with the highest mean selection measure over all 25 folds. Every other candidate is compared
+with the leader fold by fold on the same houses. Because the five runs reuse the same houses, the 25 differences are not independent,
+and their usual standard error would be too small; we use the corrected standard error of Nadeau and Bengio:
+standard deviation × √(1/25 + 1/4). If a simpler candidate is at most one corrected standard error behind the leader, the simplest such
+candidate wins; from simple to complex: (1), (2), (3), (4). The final model gets the setting with the highest mean over all 25 folds
+(decision 14 applied to the tuning curve averaged over the five runs).

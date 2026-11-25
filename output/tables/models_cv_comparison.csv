@@ -27,3 +27,6 @@ houses,"Ridge, houses only, compactness","Ridge, reference",6.0,1.6,4 of 5 folds
 houses,"Ridge, houses only, compactness","Ridge, houses only",0.0,1.5,2 of 5 folds,2 of 5 folds
 houses,"Ridge, house interactions, compactness","Ridge, reference",4.7,2.6,4 of 5 folds,0 of 5 folds
 houses,"Ridge, house interactions, compactness","Ridge, houses only",-1.3,2.3,2 of 5 folds,3 of 5 folds
+logistic houses,"Logistic regression, houses only","Logistic regression, reference",3.8,2.7,3 of 5 folds,1 of 5 folds
+logistic houses,"Logistic regression, houses only","Linear regression, reference",3.4,2.4,3 of 5 folds,2 of 5 folds
+logistic houses,"Logistic regression, houses only","Ridge, houses only",-3.0,1.1,0 of 5 folds,4 of 5 folds

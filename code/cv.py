@@ -1,13 +1,15 @@
 ## cv
 ## Cross-validation on the 5 folds from 03_split_pipeline (task 16), scored with the shared metrics (task 17).
 ## Every model is fitted on all buildings of the training folds and judged on the houses of the
-## validation fold (feedback point 1). Used for all model variants in 04_models.ipynb (tasks 18, 20-23).
+## validation fold (feedback point 1). Used for all model variants in 04_models.ipynb (tasks 18, 20-23)
+## and for the model race in 04b_model_choice.ipynb (section 9).
 
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
 from sklearn.linear_model import Lasso
+from sklearn.model_selection import StratifiedGroupKFold
 
 from config import THRESHOLD
 from metrics import evaluate, _top_positions   # _top_positions: the same ranking and tie-break as the selection measure
@@ -213,7 +215,7 @@ def paired_difference(per_fold_a, per_fold_b, metric=SELECTION, group="houses"):
     b = per_fold_b[per_fold_b["group"] == group].set_index("fold")[metric] * 100
     diff = a - b
     summary = {
-        "difference (points)": round(diff.mean(), 1) + 0.0,   # + 0.0 turns -0.0 into 0.0
+        "difference (points)": float(round(diff.mean(), 1)) + 0.0,   # + 0.0 turns -0.0 into 0.0
         "± SE": round(diff.std() / np.sqrt(len(diff)), 1),
         "better in": f"{(diff > 0).sum()} of {len(diff)} folds",
         "worse in": f"{(diff < 0).sum()} of {len(diff)} folds",
@@ -300,6 +302,144 @@ def plot_error_by_feature(tables, labels=("model", "second model"), ncols=3, pat
     fig.legend(handles=handles, loc="upper center", ncol=3, fontsize=8,
                bbox_to_anchor=(0.5, 1.0), frameon=False)
     fig.tight_layout(rect=(0, 0, 1, 0.97))
+    if path is not None:
+        fig.savefig(path, dpi=150)
+    return fig
+
+
+# ---------------------------------------------------------------------------
+# 9. Repeated cross-validation: the model race (README decisions 25-27)
+# ---------------------------------------------------------------------------
+def make_folds(data, seed, n_folds=5):
+    """A new split of the cross-validation buildings into n_folds folds, with the same rules as the split in
+    03_split_pipeline: groups (shared boiler, twins) stay together, every fold has the same share of houses.
+    data: the cross-validation table (load_cv(), so the test set is never touched). Returns the fold of every row."""
+    folds = np.full(len(data), -1)
+    splitter = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=seed)
+    for k, (_, val) in enumerate(splitter.split(data, y=data["house"], groups=data["group_id"])):
+        folds[val] = k
+    assert (folds >= 0).all(), "a building has no fold"
+    assert (pd.Series(folds).groupby(data["group_id"].to_numpy()).nunique() == 1).all(), "a group is in two folds"
+    return folds
+
+
+def run_variant(spec, X, y, is_house, folds):
+    """One variant through one split, tuned as in 04_models (decision 14). spec is a dict:
+    model:    a model class or function, or for a baseline the class itself (no pipeline)
+    tune:     (setting, values) or None, e.g. ("alpha", RIDGE_ALPHAS)
+    kwargs:   fixed arguments of the model; switches: arguments of build_pipeline
+    train_on: "all" or "houses"; baseline: True for the baselines
+    Returns the results per fold, the tuning table, the chosen value and the out-of-fold predictions."""
+    train_rows = is_house if spec.get("train_on") == "houses" else None
+    switches, kwargs = spec.get("switches", {}), spec.get("kwargs", {})
+    tuning, value = None, np.nan
+    if spec.get("baseline"):
+        make_model = spec["model"]
+    elif spec.get("tune") is None:
+        make_model = lambda: build_pipeline(spec["model"](**kwargs), **switches)
+    else:
+        param, values = spec["tune"]
+        tuning = tune_alpha(spec["model"], values, X, y, is_house, folds, model_kwargs=kwargs, param=param,
+                            train_rows=train_rows, **switches)
+        value = best_alpha(tuning, param=param)
+        make_model = lambda: build_pipeline(spec["model"](**{param: value}, **kwargs), **switches)
+    per_fold, oof = cross_validate(make_model, X, y, is_house, folds, train_rows=train_rows)
+    return {"per_fold": per_fold, "tuning": tuning, "value": value, "oof": oof}
+
+
+def corrected_se(values, n_folds):
+    """Standard error of a mean over repeated cross-validation (Nadeau and Bengio). The runs reuse the same
+    buildings, so the values are not independent and std / sqrt(n) would be too small. Instead:
+    std * sqrt(1/n + 1/(n_folds - 1)), where 1/(n_folds - 1) = size of a validation fold / size of a training part."""
+    values = np.asarray(values, dtype=float)
+    return values.std(ddof=1) * np.sqrt(1 / len(values) + 1 / (n_folds - 1))
+
+
+def _houses(per_fold, metric=SELECTION):
+    return per_fold[per_fold["group"] == "houses"].set_index(["run", "fold"])[metric] * 100
+
+
+def corrected_difference(per_fold_a, per_fold_b, metric=SELECTION):
+    """Compares variant A with variant B on the houses, fold by fold over all runs (columns run and fold).
+    Returns the differences A - B in points and one summary row: mean, corrected standard error,
+    in how many folds and in how many runs A is better."""
+    diff = (_houses(per_fold_a, metric) - _houses(per_fold_b, metric)).dropna()
+    n_folds = diff.index.get_level_values("fold").nunique()
+    by_run = diff.groupby(level="run").mean()
+    summary = {
+        "difference (points)": float(round(diff.mean(), 1)) + 0.0,
+        "± corrected SE": float(round(corrected_se(diff, n_folds), 1)),
+        "better in": f"{(diff > 0).sum()} of {len(diff)} folds",
+        "worse in": f"{(diff < 0).sum()} of {len(diff)} folds",
+        "better on average in": f"{(by_run > 0).sum()} of {len(by_run)} runs",
+    }
+    return diff, summary
+
+
+def race_table(per_fold_by_name, metric=SELECTION):
+    """One row per variant: mean over all folds of all runs with its corrected standard error, the mean of
+    every run, and the other measures on houses (top 10%, captured, MAE)."""
+    rows = []
+    for name, per_fold in per_fold_by_name.items():
+        values = _houses(per_fold, metric)
+        n_folds = values.index.get_level_values("fold").nunique()
+        houses = per_fold[per_fold["group"] == "houses"]
+        rows.append({
+            "variant": name,
+            "top 20%: above 450 (%)": round(values.mean(), 1),
+            "± corrected SE": round(corrected_se(values, n_folds), 1),
+            **{f"run {r}": round(v, 1) for r, v in values.groupby(level="run").mean().items()},
+            "top 10%: above 450 (%)": round(houses["share_above_top10"].mean() * 100, 1),
+            "top 20%: captured (%)": round(houses["captured_top20"].mean() * 100, 1),
+            "MAE": round(houses["mae"].mean(), 1),
+        })
+    return pd.DataFrame(rows).set_index("variant")
+
+
+def choose_model(per_fold_by_name, order, metric=SELECTION):
+    """The decision rule (README decision 27). order: the candidates from simple to complex.
+    Leader = highest mean over all folds of all runs. A simpler candidate wins if it is at most one corrected
+    standard error behind the leader; among those, the simplest. Returns the winner, the leader and a table."""
+    means = {name: _houses(per_fold_by_name[name], metric).mean() for name in order}
+    leader = max(order, key=lambda name: means[name])   # on a tie, the simpler one (first in order)
+    rows = []
+    for name in order:
+        diff, summary = corrected_difference(per_fold_by_name[name], per_fold_by_name[leader], metric)
+        n_folds = diff.index.get_level_values("fold").nunique()
+        se = corrected_se(diff, n_folds) if name != leader else 0.0
+        rows.append({"candidate": name, "mean (%)": round(means[name], 1),
+                     **({"difference to leader (points)": 0.0, "± corrected SE": 0.0} if name == leader else
+                        {"difference to leader (points)": summary["difference (points)"],
+                         "± corrected SE": summary["± corrected SE"]}),
+                     "within one SE of the leader": bool(name == leader or diff.mean() >= -se)})
+    table = pd.DataFrame(rows).set_index("candidate")
+    winner = table.index[table["within one SE of the leader"]][0]   # the simplest candidate within one SE
+    return winner, leader, table
+
+
+def plot_race(per_fold_by_name, reference=None, path=None, metric=SELECTION):
+    """One row per variant: small dots = mean of each run, large dot = mean over all folds of all runs,
+    bar = ± corrected standard error. reference: dict label -> value in % (vertical grey lines)."""
+    reference = reference or {}
+    names = list(per_fold_by_name)
+    fig, ax = plt.subplots(figsize=(9, 0.7 * len(names) + 1.5))
+    for i, name in enumerate(names[::-1]):
+        values = _houses(per_fold_by_name[name], metric)
+        n_folds = values.index.get_level_values("fold").nunique()
+        run_means = values.groupby(level="run").mean()
+        ax.scatter(run_means, np.full(len(run_means), i), s=18, color="C0", alpha=0.45, zorder=2,
+                   label="mean of one run" if i == 0 else None)
+        ax.errorbar(values.mean(), i, xerr=corrected_se(values, n_folds), fmt="o", color="C0", markersize=8,
+                    capsize=3, zorder=3, label="mean of all runs ± corrected SE" if i == 0 else None)
+    styles = ["--", ":", "-."]
+    for j, (label, value) in enumerate(reference.items()):
+        ax.axvline(value, color="grey", linestyle=styles[j % len(styles)], linewidth=1, label=label)
+    ax.set_yticks(range(len(names)))
+    ax.set_yticklabels(names[::-1], fontsize=9)
+    ax.set_xlabel("Houses above 450 in the top 20% (%)")
+    ax.set_title("Model race: five splits of the cross-validation data")
+    ax.legend(fontsize=8, loc="upper center", bbox_to_anchor=(0.5, -0.15), ncol=2, frameon=False)   # below the plot
+    fig.tight_layout()
     if path is not None:
         fig.savefig(path, dpi=150)
     return fig

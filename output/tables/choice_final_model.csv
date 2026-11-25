@@ -1,0 +1,2 @@
+variant,model,trained on,switches,fixed arguments,setting,value
+"Ridge, houses only",Ridge,houses,{},{},alpha,31.622776601683793

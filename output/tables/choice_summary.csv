@@ -1,0 +1,7 @@
+variant,top 20%: above 450 (%),± corrected SE,run 1,run 2,run 3,run 4,run 5,top 10%: above 450 (%),top 20%: captured (%),MAE
+"Ridge, houses only",58.5,4.2,60.4,59.6,59.6,56.2,56.6,54.6,31.0,106.6
+"Ridge, houses only, compactness",60.1,4.7,60.4,61.3,60.0,58.7,60.0,57.3,31.9,106.1
+"Ridge, house interactions, compactness",58.1,5.2,59.1,58.7,59.6,57.4,55.7,53.9,30.8,104.7
+"Gradient boosting, reference",58.8,4.8,61.7,55.7,56.6,57.9,62.1,56.8,31.2,101.8
+"Expert rule, baseline",44.7,4.4,45.1,44.3,45.5,45.5,43.0,42.1,23.6,106.3
+"Training mean, baseline",37.4,4.9,34.0,36.2,41.3,39.6,36.2,36.6,19.7,117.5
