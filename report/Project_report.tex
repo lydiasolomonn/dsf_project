@@ -55,24 +55,62 @@
 \owner{Person 1 (2.1, 2.2), Person 2 (2.3), Person 5 (2.4, 2.5)}{1 page}
 
 \subsection{Sources}
-\todo{The five raw files, publishers and download date (README, ``Data'' table). Merged on EGID.}
+There is five public files, all linked by the federal building number (EGID). Three come from the
+Canton of Geneva (SITG): the yearly heating index (\texttt{SCANE\_INDICE\_MOYENNES\_3\_ANS}), the
+declaration status of each building (\texttt{OCEN\_ETAT\_IDC\_PUBLIC}) and the list of buildings
+that share a central boiler (\texttt{SCANE\_RELATION\_BATI\_CHAUDIERE}). Two come from the Federal
+Statistical Office: the Federal Register of Buildings and Dwellings (GWR) for the canton of Geneva
+(\texttt{gebaeude\_batiment\_edificio}) and its code list (\texttt{kodes\_codes\_codici}). All
+files were downloaded on 13 November 2026; the links are in the README.
 
 \subsection{Target and cleaning}
-\todo{
-\begin{itemize}
-  \item Target: latest 3-year average from 2023 on (task 6); year effect (task 10, \texttt{output/figures/preprocess\_year\_effect.png}).
-  \item Cleaning rule fixed before the test set: keep 50--1,500 MJ/m\textsuperscript{2} (README decision 2).
-  \item Merge loss 21,206 $\to$ 14,827 buildings, of which houses (task 7, \texttt{output/tables/preprocess\_merge\_loss.csv}): small table.
-\end{itemize}}
+The heating file has one row per building and year. A building's values in
+different years are almost the same, so with several years the model could see one year in training and copy the
+answer for another year in the test set. Therefore we keep one value per building: its latest 3-year average because thats how the  ending in 2023
+or later. We keep these because Geneva's thresholds are based on that 3-year average and a later cutoff would cost about a third of our houses. 
+
+\textbf{Implausible values:} we keep 50--1,500 MJ/m\textsuperscript{2} per year; lower values point to a
+wrong floor area, higher ones to data errors (25 buildings removed).
+
+\textbf{Houses definition}: We define houses as buildings with one or two dwellings in the register (GKLAS 1110 and 1121), because the register is the only source that also covers the undeclared houses our model is meant for. This definition covers 95\% of the target group (21,906 of the 23,123 residential buildings with fewer than 5 heat consumers).
+
+\textbf{Year effect}: Index values fall over time: for the same buildings, the median fell by 43 between the periods ending in 2023 and 2026, so our older targets may be slightly too high. For houses there is no clear trend.Keeping only periods ending in 2025 would cost us about 450 of our 1,531 houses, so we keep all periods from 2023 on.
+
+Table~\ref{tab:mergeloss} shows what each step removes. The heating checks are explained in Section~2.3.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{lrr}
+\toprule
+Step & Buildings & Houses \\
+\midrule
+All buildings in the heating file           & 21,206 & 3,879 \\
+3-year average ending in 2023 or later      & 16,587 & 1,532 \\
+Plausible value (50--1,500)                 & 16,562 & 1,531 \\
+In the register and still existing          & 16,452 & 1,531 \\
+Same energy source in all 3 target years    & 15,755 & 1,466 \\
+Same energy source today (final data)       & 14,827 & 1,366 \\
+\bottomrule
+\end{tabular}
+\caption{From the heating file to the modelling table (\texttt{output/tables/preprocess\_merge\_loss.csv}).}
+\label{tab:mergeloss}
+\end{table}
 
 \subsection{Features and the dates of the heating information}
-\todo{
-\begin{itemize}
-  \item Register features (\texttt{pipeline.py}): floor area, floors, dwellings, construction period, building class,
-        energy group, heating system, municipality.
-  \item Heating changes after the target period: rule and counts (task 9, feedback point 2).
-  \item Columns excluded because they contain the answer (leakage).
-\end{itemize}}
+\textbf{Features} come only from the building register, the one source that also covers undeclared houses:
+construction period, building class, energy source (grouped into gas, oil, district heat, heat pump, wood, electric,
+other), heating system, footprint (floor) area, floors, dwellings and municipality. A missing category becomes ``unknown'';
+missing numbers are filled inside the pipeline with the median of the training folds only, so no information leaks
+from the validation or test data. The heated floor area is never a feature, because a building only has it once it
+has declared.
+
+\textbf{Heating changes: }The register shows \emph{today's} heating, but the target was measured
+in earlier years. If the heating changed, the features describe a different building than the one that produced the
+value. We drop two kinds of buildings: (1) 697 buildings (65 houses) whose energy source changed \emph{during} their
+three target years, so their value mixes two heating systems; (2) 928 buildings (100 houses) whose energy source
+today differs from the one in their target years.Some of these differences are hard to explain as real replacements (e.g.\ 142 buildings from gas to oil, the opposite of the usual direction) and may come from the two files recording the energy source differently. We did not verify this, and it does not change our decision: either way, features and target do not match. The register's update date could not help, because almost all heating entries carry a date in 2024 or 2025 and so do not separate changed from unchanged heating.
+
+\textbf{Groups for the split.} The heating index is calculated per heating installation, so buildings that share a boiler all receive exactly the same value. We also treat buildings with the same end year, value and heated floor area as ``twins'', since they probably share an installation that the boiler file does not list. If one such building were in training and its partner in the test set, the model could simply copy the answer. We therefore link these buildings into groups (3089 (21\%) of buildings share a group) and never split a group between training and test.
 
 \subsection{Descriptive analysis}
 \todo{Distribution of the target, by building class and construction period: 1--2 figures (task 15).
@@ -87,16 +125,43 @@ Share above 450: 38\% of houses, 29\% of all buildings.}
 \owner{Person 3 (3.1, 3.2), Person 4 (3.3), Person 5 (3.4)}{1 page}
 
 \subsection{Split and cross-validation}
-\todo{Test set 2,117 buildings (195 houses), locked until the end; 5 folds with boiler groups kept together and the
-same share of houses in every part (README decisions 9--10, task 16, feedback point 1).}
+We split the 14,827 buildings once, with a fixed random seed, and all models use this split.
+First, about one seventh of the data (2,117 buildings, 195 of them houses) was set aside as the
+test set. It stayed locked until the final evaluation in Section~5 and played no part in choosing
+features, models or tuning parameters. The remaining 12,710 buildings (1,171 houses) were split
+into five folds of about 2,540 buildings each. In every round of cross-validation, a model is
+trained on four folds and judged on the fifth. Two rules shaped the split, both applied with scikit-learn's \texttt{StratifiedGroupKFold}.
+\begin{enumerate}
+    \item Buildings that share a heating installation get the same declared value. If one of them were
+in training and the other in validation, the model could “predict” a building by copying its
+twin, and the scores would be too optimistic. We therefore linked buildings on the same
+boiler (boiler file) and “twins” with the same reference year, value and heated floor area
+into groups: 3,089 buildings (21\%) share a group with at least one other building, the
+largest group has 20. Every group lies entirely in one fold or in the test set.
+    \item  Second, houses are only 9.2\% of the data
+but are the group the office cares about, so every fold and the test set contain the same share of
+houses (9.2\%), about 234 per fold. The share of houses above 450~MJ/m\textsuperscript{2} was not
+balanced on purpose and varies between 35.9\% and 39.6\% across the parts.
+\end{enumerate}
 
 \subsection{Selection measure and baselines}
-\todo{
+
 \begin{itemize}
-  \item Selection measure: share of houses above 450 among the top 20\% of the ranking; why it fits the outreach
-        decision; MAE reported as an easy number (README decisions 1 and 3, feedback point 3).
-  \item Baselines: training mean and expert rule (construction period $\times$ energy source) (task 18, feedback point 4).
-\end{itemize}}
+  \item Selection measure: The office needs to know whose owners to contact first, so we judge models by the list they
+produce. In each validation fold we rank the houses by their prediction, take the top 20\%, and
+count the share that is really above 450~MJ/m\textsuperscript{2}: the \emph{hit rate}. We report
+its mean over the five folds with its standard error (SE), houses first and all buildings next to
+them; the same measure also chooses the penalty of ridge, lasso and logistic regression. With
+about 47 houses in each top 20\%, one house moves the hit rate by about two points, so differences
+smaller than one SE count as chance. As extras we report the hit rate in the top 10\% and the mean
+absolute error (MAE) in MJ/m\textsuperscript{2}.
+  \item Baselines: every model must beat two baselines, fitted on the training folds like the models.
+The \emph{training mean} gives every building the same value, so its list is random: its hit rate is
+about the share of houses above 450 (38.0\% in cross-validation). The \emph{expert rule} gives each
+building the mean index of its construction period $\times$ energy group in the training folds
+(an unseen combination gets the overall mean). This is what an energy expert could do without a
+statistical model, and the bar a model has to clear to be worth using.
+\end{itemize}
 
 \subsection{Preprocessing and regression models}
 \todo{Pipeline fitted on the training part of each fold; expert rule as one feature (target encoding);
@@ -106,6 +171,24 @@ tasks 19--20).}
 \subsection{Classification variant}
 \todo{Logistic regression on ``above 450 or not''; same folds, features and selection measure; C chosen by
 cross-validation; deck 12 measures (task 21, \texttt{code/04\_models.ipynb}, section 6).}
+
+\subsection{Extra check: a tree model}
+ To see whether the register holds more information than a linear model can use, we also fitted gradient
+boosting (\texttt{HistGradientBoostingRegressor}). It builds many small decision trees one after
+another, each correcting the errors of the previous ones, so it can find interactions such as
+``old, oil-heated and small'' by itself. It uses the same pipeline, folds and selection measure as
+the other models. The tree size (7, 15 or 31 leaves) was chosen like $\alpha$; the learning rate was
+fixed at 0.05 with 300 trees, and early stopping was switched off, because it would make the result
+depend on a random hold-out.
+
+Trained on all buildings, gradient boosting reaches the highest hit rate on houses of all variants,
+61.7\%~$\pm$~4.4 (ridge on all buildings: 54.5\%), and the lowest MAE (102.2 on houses, 72.2 on all
+buildings). Trained on houses only, it reaches 59.1\%~$\pm$~4.1. Compared fold by fold with ridge
+trained on houses only (60.4\%), the difference is small and uncertain: $+1.3 \pm 2.9$ and
+$-1.3 \pm 3.1$ points. A flexible model therefore ranks houses about as well as a linear model that
+learns from houses only. Most of the gain over the linear models trained on all buildings seems to
+come from treating houses differently from other buildings, which the tree model does by itself and
+ridge does by learning from houses only.
 
 % =====================================================================
 \section{Results in cross-validation}
@@ -123,7 +206,31 @@ and precision/recall in one sentence (\texttt{code/04\_models.ipynb}, section 6;
 \todo{With and without heating information and municipality (task 22).}
 
 \subsection{Trained on houses only versus all buildings}
-\todo{Same houses, spread across folds (task 23).}
+Only about 9\% of our buildings are houses (1366 houses out of 14827 buildings). The question is does a model that learns only from houses rank them better? Version A learns from all buildings of the four training folds (about 10165-10169), version B only from their houses (about 937-936). Both are judged on the same validation houses. For ridge, each version gets its own alpha because the best amount of shrinkage depends on how much data the model learns from, so we tune each one separately in cross-validation to compare both at their best setting.
+
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{llrrc}
+\toprule
+Model & Trained on & Top 20\%: above 450 (\%) & MAE & B better in \\
+\midrule
+Linear regression & A: all buildings & 54.0 & 104.8 & \\
+                  & B: houses only   & 57.9 & 108.3 & 3 of 5 folds \\
+Ridge             & A: all buildings & 54.5 & 106.7 & \\
+                  & B: houses only   & 60.4 & 107.1 & 4 of 5 folds \\
+\bottomrule
+\end{tabular}
+\caption{Houses only vs.\ all buildings, judged on houses in cross-validation.}
+\label{tab:housesonly}
+\end{table}
+
+Learning from houses only puts more problem houses on the list: When the model learns only from houses, about 57.9--60 of every 100 contacted owners really are above 450, compared with about 54 when it learns from all buildings(Table~\ref{tab:housesonly}). The evidence is moderate. For linear regression the gain is small and could be chance: $+3.8$ points on average ($\pm 3.4$ standard error), better in only 3 of 5 folds. For ridge it is more convincing:
+$+6.0$ points ($\pm 2.4$ standard error), better in 4 of 5 folds. The MAE gets slightly worse, so learning
+from houses only does not predict the exact values better, but it puts the houses in a
+better order, which is what matters for the list. Houses seem to be different enough from
+other buildings to justify their own model, even though it learns from about 11 times fewer
+rows. One caveat: alpha was chosen on the same folds, so the ridge result is slightly too
+optimistic. The final choice is made in Section~5.1.
 
 % =====================================================================
 \section{Final model and test result}
@@ -140,7 +247,17 @@ and precision/recall in one sentence (\texttt{code/04\_models.ipynb}, section 6;
 feedback point 5).}
 
 \subsection{Error analysis}
-\todo{Errors by building class and construction period; plausibility of the predictions (task 24).}
+Where does the model go wrong? We look at its cross-validation predictions, where each
+house is predicted by a model that never saw it, and ask three questions.
+
+\textbf{How far off are the predictions?} The model plays it safe: it rarely predicts very low or very high values. A house with a true index below 250 is predicted on average
+162 too high, and a house above 700 on average 323.6 too low. Near the threshold of 450 the errors are much smaller. This is why the average error is large (MAE 104.8 MJ/m\textsuperscript{2} per year).
+For the office, this has two consequences. First, the predicted index of a single house is not reliable: a house predicted at 500 may really be at 800. Second, the ranking still works, because a house with a high true value usually still gets a higher prediction than a house with a low true value. The model is poor at saying \emph{how high} a value is, but good enough at saying \emph{which house comes first}, and the list only needs the second.
+
+\textbf{Which houses end up on the list?} The office would contact the 20\% of houses with the highest predictions (235 of 1,171 houses). A house on this list is a \emph{hit} if it is really above 450, and a \emph{false alarm} if not: 127 are hits and 108 are false alarms. Two features dominate the list. Oil-heated houses make up only a third of all houses (32\%), but 67.7\% of the hits and 74.1\% of the false alarms. Houses built
+between 1946 and 1980 make up 70\% of the hits and 76.9\% of the false alarms. The problem houses that the list misses look different: two thirds of them (64.8\%) heat with gas, and a quarter (26.4\%) were built before 1919. Many false alarms are close calls: 56 of the 108 have a true value between 400 and 450, just below the threshold.
+
+\textbf{Why are some errors so large?} The biggest errors are things the register cannot see: very high values in small houses (possibly a wrong floor area in the heating file) and very low values in old houses (probably renovated). The register has no information on renovations, which limits any model built on it.
 
 % =====================================================================
 \section{Limitations and conclusion}
