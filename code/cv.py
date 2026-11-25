@@ -1,5 +1,5 @@
 ## cv
-## Cross-validation on the 5 folds from 03_split_pipeline (task 16), scored with the shared metrics (task 17).
+## Cross-validation on the 5 folds from 02_split_pipeline (task 16), scored with the shared metrics (task 17).
 ## Every model is fitted on all buildings of the training folds and judged on the houses of the
 ## validation fold (feedback point 1). Used for all model variants in 04_models.ipynb (tasks 18, 20-23)
 ## and for the model race in 04b_model_choice.ipynb (section 9).
@@ -312,7 +312,7 @@ def plot_error_by_feature(tables, labels=("model", "second model"), ncols=3, pat
 # ---------------------------------------------------------------------------
 def make_folds(data, seed, n_folds=5):
     """A new split of the cross-validation buildings into n_folds folds, with the same rules as the split in
-    03_split_pipeline: groups (shared boiler, twins) stay together, every fold has the same share of houses.
+    02_split_pipeline: groups (shared boiler, twins) stay together, every fold has the same share of houses.
     data: the cross-validation table (load_cv(), so the test set is never touched). Returns the fold of every row."""
     folds = np.full(len(data), -1)
     splitter = StratifiedGroupKFold(n_splits=n_folds, shuffle=True, random_state=seed)

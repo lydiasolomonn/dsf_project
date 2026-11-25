@@ -26,7 +26,7 @@ for folder in (PROCESSED, TABLES, FIGURES):
 
 
 # ---------------------------------------------------------------------------
-# Loading the split data (written by 03_split_pipeline.ipynb)
+# Loading the split data (written by 02_split_pipeline.ipynb)
 # ---------------------------------------------------------------------------
 def load_cv():
     """The buildings for cross-validation (one row per building, column `fold` = 0-4).
