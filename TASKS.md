@@ -53,19 +53,19 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 18 | Compute the baselines in cross-validation: training mean, and the expert rule construction period by energy source; scored on houses | Person 3 | Person 4 | 22 Nov | Done | 1, 4 |
 | 19 | Preprocessing as a pipeline, fitted on the training part of each fold only: encoding, scaling, and the interaction of construction period and energy source | Person 4 | Person 3 | 22 Nov | Done, needs review  | 4 |
 | 20 | Train linear regression, ridge and lasso, with and without the interaction; choose settings by cross-validation on houses with the selection measure | Person 4 | Person 3 | 23 Nov | Done, needs review | 3, 4 |
-| 21 | Classification variant (above 450 or not) with logistic regression, compared on the same selection measure | Person 5 | Person 4 | 24 Nov | DONE, NEEDS REVIEW | 3 |
+| 21 | Classification variant (above 450 or not) with logistic regression, compared on the same selection measure | Person 5 | Person 4 | 24 Nov | Done | 3 |
 | 22 | Compare feature sets: with and without heating information, with and without municipality | Person 4 | Person 2 | 24 Nov | Done, needs review | 2 |
-| 23 | Experiment: trained on houses only versus trained on all, measured on the same houses in cross-validation | Person 1 | Person 4 | 24 Nov | Open | 1 |
-| 24 | Error analysis: errors by building class and construction period, check predictions for plausibility | Person 2 | Person 5 | 24 Nov | updated by Person 4 (final model), needs review | |
+| 23 | Experiment: trained on houses only versus trained on all, measured on the same houses in cross-validation | Person 1 | Person 4 | 24 Nov | Done | 1 |
+| 24 | Error analysis: errors by building class and construction period, check predictions for plausibility | Person 2 | Person 5 | 24 Nov | updated (final model), needs review | |
 | 25 | Coaching on 25 Nov, 18:15: show the cross-validation results and bring one result you do not trust | All | | 25 Nov | Done | |
-| 26 | Choose the model by the cross-validation on houses, evaluate exactly once on the test set. Report houses first, all buildings beside them | Person 3 | Person 4 | 25 Nov | updated by Person 4 (model race, final model, test set), needs review | 1 |
-| 27 | Hit-rate curve on test houses for several list lengths, with the number of owners each length means | Person 3 | Person 5 | 26 Nov | updated by Person 4 (final model), needs review | 5 |
+| 26 | Choose the model by the cross-validation on houses, evaluate exactly once on the test set. Report houses first, all buildings beside them | Person 3 | Person 4 | 25 Nov | updated (model race, final model, test set), needs review | 1 |
+| 27 | Hit-rate curve on test houses for several list lengths, with the number of owners each length means | Person 3 | Person 5 | 26 Nov | updated (final model), needs review | 5 |
 
 ## Phase 4: Submission
 
 | No | Task | Owner | Reviewer | Due | Status | FB |
 | --- | --- | --- | --- | --- | --- | --- |
-| 28 | Set up the report skeleton (3 to 6 pages) from the project description, assign sections | Person 5 | All | 24 Nov | Open | |
+| 28 | Set up the report skeleton (3 to 6 pages) from the project description, assign sections | Person 5 | All | 24 Nov | Done | |
 | 29 | Figures for report and slides: distribution, model comparison, hit-rate curve | Person 1 | Person 5 | 26 Nov | Open | |
 | 30 | Write the report: everyone writes their own part | All | | 27 Nov | Open | |
 | 31 | Write the AI-use statement: which tools, for which parts | Person 5 | All | 27 Nov | Open | |
@@ -79,7 +79,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | No | Task | Owner | Reviewer | Due | Status | FB |
 | --- | --- | --- | --- | --- | --- | --- |
 | 36 | Rehearsal: 8-minute talk, then ask each other interview questions, including on the feedback points | All | | 1 Dec | Open | |
-| 37 | Presentation evenings on 2 Dec and 9 Dec, 18:15 (attendance mandatory at both) | All | | 9 Dec | Open | |
+| 37 | Presentation evenings on 2 Dec and 9 Dec, 18:15 (attendance mandatory at both) | All | | 2 Dec | Open | |
 
 ## Rules for all code
 
