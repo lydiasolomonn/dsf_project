@@ -345,5 +345,15 @@ l'énergie (REn), rsGE L 2 30.01, art.~14 al.~1, as amended on 13 April 2022.
 
 \end{thebibliography}
 
+\section*{AI-use statement}
 
+We used Claude (Anthropic) during the project. It helped us with the following parts:
+
+\begin{itemize}
+  \item \textbf{Ideas:} brainstorming project topics and data sources; first feasibility checks of candidate datasets (e.g.\ whether a simple baseline would already be as good as a model); pointing out possible problems such as leakage and class imbalance. The choice of topic, target, house definition and selection measure was ours and was agreed with the lecturer.
+  \item \textbf{Code:} first drafts of functions and notebooks, which we then adapted, ran on our data and tested: the scoring functions (\texttt{metrics.py}, tested on a small example counted by hand), the train/test split and cross-validation folds, and the baselines [plus: other parts, e.g.\ pipeline, models]. Help with setting up Python.
+  \item \textbf{Text:} suggestions for wording in the project description, the documented decisions in the README and the report.
+  \item \textbf{Checks:} reviewing our code and results for errors and plausibility, e.g.\ whether preprocessing learned only from the training part, and whether the random baseline gave the expected share of houses above 450.
+  \item \textbf{Explanations:} explaining methods we used, such as grouped cross-validation and target encoding, so that each of us understands the concepts.
+\end{itemize}
 \end{document}
