@@ -1,2 +1,2 @@
-variant,model,trained on,switches,fixed arguments,setting,value
-"Ridge, houses only",Ridge,houses,{},{},alpha,31.622776601683793
+variant,winner by the rule,model,trained on,switches,fixed arguments,setting,value
+"Ridge, houses only, compactness","Ridge, houses only",Ridge,houses,"{""compactness"": true}",{},alpha,3.1622776601683795

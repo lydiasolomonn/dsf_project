@@ -18,7 +18,7 @@ All files are linked by the federal building number (EGID).
 (`nbformat` is needed to run notebooks with `%run`; the first cell of `00_main.ipynb` installs it).
 
 **Run:** open `code/00_main.ipynb`, select the kernel and choose **Run All**. It runs the notebooks of the five steps
-in order (about 11 minutes, most of it `04_models.ipynb` and `04b_model_choice.ipynb`). Every notebook can also be run on its own once the
+in order (about 11 minutes, most of it `04_models.ipynb` and the model race in `05_evaluation.ipynb`). Every notebook can also be run on its own once the
 notebooks before it have written their files. Paths come from `config.py`, so the working directory does not matter.
 All notebooks and modules take the seed from `config.py` (decision 15).
 
@@ -29,8 +29,7 @@ All notebooks and modules take the seed from `config.py` (decision 15).
 | 2 Split & pipeline | `02_split_pipeline.ipynb` | test set and folds (task 16); checks of the metric functions, the expert rule and the pipeline (tasks 17, 19) | `data/processed/cv.csv`, `data/processed/test.csv` |
 | 3 Explore | `03_describe.ipynb` | target group, declared vs. undeclared houses, descriptive analysis (tasks 13–15); reads `cv.csv`, so it runs after the split | `output/*/describe_*` |
 | 4 Models | `04_models.ipynb` | all model variants in cross-validation, trained once and compared: baselines (18), linear regression, ridge, lasso (20), classification (21), feature sets (22), houses only (23) | `output/tables/models_*.csv`, `output/figures/models_*.png` |
-| 4b Model choice | `04b_model_choice.ipynb` | the model race: four candidates on five different splits of the cross-validation data, choice of the final model and its setting (decisions 25–27); later section 1 of `05_evaluation.ipynb` | `output/tables/choice_*.csv`, `output/figures/choice_race.png` |
-| 5 Evaluation | `05_evaluation.ipynb` | choice of the final model, error analysis (24), test set (26), hit-rate curve (27) | `output/tables/evaluation_*.csv`, `output/figures/evaluation_*.png` |
+| 5 Evaluation | `05_evaluation.ipynb` | choice of the final model in a race of four candidates on five splits (decisions 25–28), error analysis of the final model (24), test set (26), hit-rate curve (27) | `output/tables/choice_*.csv`, `output/tables/evaluation_*.csv`, `output/figures/choice_race.png`, `output/figures/evaluation_*.png` |
 | shared | `config.py` | seed, threshold, paths, `load_cv()` and `load_test()` | – |
 | shared | `pipeline.py` | preprocessing pipeline, classification wrapper and expert-rule baseline used by all models | – |
 | shared | `metrics.py` | shared metric functions (task 17) | – |
@@ -102,7 +101,7 @@ random 38%), but not better than ridge trained on houses only: +1.3 ± 2.9 and �
 each winning only 3 of 5 folds. The limit is the information in the register, not the flexibility of the model.
 
 ### Final model choice (task 26, fixed 25 Nov 2026)
-19. Final model: ridge trained on houses only (alpha = 31.6). Its mean is only slightly lower than that of gradient
+19. *(Replaced by decision 28.)* Final model: ridge trained on houses only (alpha = 31.6). Its mean is only slightly lower than that of gradient
 boosting trained on all buildings (60.4% vs. 61.7%), and the difference is within one standard error (+1.3 ± 2.9
 points). We choose ridge because it is simpler and easier to understand: each prediction is a sum of effects of the
 register characteristics, while gradient boosting combines hundreds of trees. 
@@ -146,7 +145,7 @@ about 2 / floors (roof and floor slab) plus a term in 1 / √footprint (walls). 
 The columns are added to the log features, both for ridge on houses only and for ridge with house interactions.
 
 ### Model choice: repeated cross-validation (fixed 25 Nov 2026)
-Computed in `code/04b_model_choice.ipynb`, on the cross-validation data only; the test set is not used. Several variants lie within
+Computed in `code/05_evaluation.ipynb` (section 1), on the cross-validation data only; the test set is not used. Several variants lie within
 the noise of one split (standard error about 3 points, about 47 houses in the top 20% of a fold), and the more variants we compare,
 the more optimistic the best value is. So a small list of candidates, fixed here before the run, competes on five different splits.
 This replaces decision 19 once the race and the coaching are done.
@@ -167,3 +166,14 @@ and their usual standard error would be too small; we use the corrected standard
 standard deviation × √(1/25 + 1/4). If a simpler candidate is at most one corrected standard error behind the leader, the simplest such
 candidate wins; from simple to complex: (1), (2), (3), (4). The final model gets the setting with the highest mean over all 25 folds
 (decision 14 applied to the tuning curve averaged over the five runs).
+
+### Final model (coaching 25 Nov 2026)
+28. Final model: ridge trained on houses only, with compactness (candidate 2), alpha = 3.16 (the best mean over all
+25 folds, as in decision 27). The rule of decision 27 picks the simpler ridge without compactness, because compactness is only
+1.6 ± 1.7 points ahead. In the coaching we chose compactness anyway, following the lecturer: preferring the simpler model pays
+off when it saves something, for example a data source. Compactness needs no extra data (only floor area and floors, which the
+model uses anyway), has no drawback, has a physical reason, and is ahead in 4 of 5 runs. A meta-model that combines the
+candidates (stacking) was suggested in the coaching; we checked it and dropped it: the errors of the candidates are very
+similar, and a simple average of their predictions does not rank houses better (section 1 of `05_evaluation.ipynb`).
+For transparency: the earlier final model (decision 19, ridge on houses only) had already been evaluated once on the test set
+before the coaching. The choice in the coaching is based on the cross-validation race only, not on that test result.

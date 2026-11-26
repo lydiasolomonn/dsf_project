@@ -1,0 +1,3 @@
+variant,compared with,difference (points),± corrected SE,better in,worse in,better on average in
+Average: ridge with compactness and gradient boosting,"Ridge, houses only, compactness",-0.7,2.2,12 of 25 folds,12 of 25 folds,1 of 5 runs
+Average of all four candidates,"Ridge, houses only, compactness",-1.2,1.8,9 of 25 folds,12 of 25 folds,1 of 5 runs

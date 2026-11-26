@@ -2,7 +2,7 @@
 ## Cross-validation on the 5 folds from 02_split_pipeline (task 16), scored with the shared metrics (task 17).
 ## Every model is fitted on all buildings of the training folds and judged on the houses of the
 ## validation fold (feedback point 1). Used for all model variants in 04_models.ipynb (tasks 18, 20-23)
-## and for the model race in 04b_model_choice.ipynb (section 9).
+## and for the model race in 05_evaluation.ipynb (section 1; functions in section 9 below).
 
 import numpy as np
 import pandas as pd
