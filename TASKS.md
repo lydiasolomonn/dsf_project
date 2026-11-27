@@ -27,7 +27,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 2 | Freeze the raw data: store all 4 files with their download date, add source links to the README | Person 1 | Person 2 | 18 Nov | Done | |
 | 3 | Answer the lecturer's feedback (14 Nov) point by point in the project description document | Person 5 | All | 19 Nov | Open | 1-5 |
 | 4 | Coaching on 18 Nov, 18:15: bring questions on the selection measure, the split by building class and the interaction terms | All | | 18 Nov | Done | 1, 3, 4 |
-| 5 | Fix three decisions in the README before any modelling: (a) the selection measure; (b) the rule for implausible target values; (c) the list lengths and why | Person 3 | All | 19 Nov | Done, needs to be reviewed | 3, 5 |
+| 5 | Fix three decisions in the README before any modelling: (a) the selection measure; (b) the rule for implausible target values; (c) the list lengths and why | Person 3 | All | 19 Nov | Done | 3, 5 |
 
 ## Phase 2: Data
 
@@ -58,7 +58,7 @@ Task list for our group project. It is a guide, not a contract: adjust it as the
 | 23 | Experiment: trained on houses only versus trained on all, measured on the same houses in cross-validation | Person 1 | Person 4 | 24 Nov | Done | 1 |
 | 24 | Error analysis: errors by building class and construction period, check predictions for plausibility | Person 2 | Person 5 | 24 Nov | updated (final model), needs review | |
 | 25 | Coaching on 25 Nov, 18:15: show the cross-validation results and bring one result you do not trust | All | | 25 Nov | Done | |
-| 26 | Choose the model by the cross-validation on houses, evaluate exactly once on the test set. Report houses first, all buildings beside them | Person 3 | Person 4 | 25 Nov | updated (model race, final model, test set), needs review | 1 |
+| 26 | Choose the model by the cross-validation on houses, evaluate exactly once on the test set. Report on houses | Person 3 | Person 4 | 25 Nov | updated (model race, final model, test set), needs review | 1 |
 | 27 | Hit-rate curve on test houses for several list lengths, with the number of owners each length means | Person 3 | Person 5 | 26 Nov | updated (final model), needs review | 5 |
 
 ## Phase 4: Submission

@@ -125,8 +125,9 @@ expert-rule column.
 tie, the smaller MAE on houses. Ridge 0.01 to 100,000 and lasso 0.001 to 100, 26 to 29 values on a log scale. The measure
 depends only on the order of the houses, so it changes little with alpha.
 19. One seed: `config.py` holds the project seed (42) and the threshold (450); all notebooks and modules import them.
-20. Classification: logistic regression on "above 450 or not" ranks houses as well as linear regression, not better
-(−0.4 ± 0.8 points), also when trained on houses only (−3.0 ± 1.1 against ridge on houses only). We keep regression: the
+20. Classification: logistic regression on "above 450 or not" ranks houses as well as regression, not better. The best
+logistic regression (54.5%) is within 0.0 to 0.9 points of the six regression models (53.6% to 54.5%), always less than one
+standard error; trained on houses only it is behind ridge on houses only (−3.0 ± 1.1 points). We keep regression: the
 distance to the threshold carries information that a yes/no label throws away.
 21. Feature sets: without heating information, without municipality, or without both, the ranking of houses is not
 clearly worse (all differences within one standard error). We keep the full set: heating and municipality help the level a
@@ -144,8 +145,9 @@ buildings): the limit is the information in the register, not the flexibility of
 houses only, with a 95% interval (± 1.96 · standard deviation / √n), for groups of at least 20 houses. We compare the number of
 clearly-off groups with the number expected by chance (5%), and count what each group does to the contact list, because an
 error only matters if it changes the list. Result: 9 of 74 groups are clearly off (3.7 by chance); construction period ×
-energy source is captured by the expert-rule column (1 of 20 combinations, as by chance); only the floor area matters for
-the list (small houses too high, medium ones too low).
+energy source is captured by the expert-rule column (1 of 20 combinations, as by chance). The floor area is the only feature
+with a systematic error across many houses on the list (small houses too high, medium ones too low); the other clear groups
+are small or put only a few houses on the list.
 25. Floor area as a spline (experiment): log floor area as a curve with 5 knots. It removes the wave by floor area but does not
 rank houses better; not pursued.
 26. Compactness: two extra columns, 1 / floors and 1 / √floor area. `floor_area` is the footprint, so the heated area is about
@@ -175,7 +177,7 @@ average out the luck of one split, but not the limited number of houses.
 32. Rule: the leader has the highest mean over all 25 folds; a simpler candidate at most one corrected standard error behind it
 wins; order from simple to complex (1), (2), (3), (4). The setting of the final model is the one with the highest mean over
 all 25 folds.
-33. Final model (coaching 25 Nov 2026): ridge on houses only with compactness, alpha = 3.16. It leads the race (60.1%, ahead in
+33. Final model (chosen in the coaching): ridge on houses only with compactness, alpha = 3.16. It leads the race (60.1%, ahead in
 4 of 5 runs); the rule would pick ridge without compactness, 1.6 ± 1.7 points behind. Following the lecturer, preferring the
 simpler model pays off when it saves something, for example a data source; compactness needs no extra data, has no drawback
 and has a physical reason.
@@ -184,6 +186,8 @@ does not rank houses better than the final model (−0.7 ± 2.2 and −1.2 ± 1.
 
 ### Test set and hit-rate curve (`05_evaluation.ipynb`, sections 3 and 4)
 35. Test set: the final model is trained once on the houses of all cross-validation buildings and evaluated once on the test
-set, houses first, all buildings beside them, with the expert rule as reference. Nothing is changed after the result.
+houses, with the expert rule as reference. Only houses are reported: the model is trained on houses and meant for houses.
+Nothing is changed after the result.
 36. Hit-rate curve: share of contacted test houses above 450 for every list length (decision 2), with random choice, the expert
-rule and a perfect model as references.
+rule and a perfect model as references. A second axis translates the list length into owners of the 21,377 undeclared houses
+in the target group (`03_describe.ipynb`): the top 20% means about 4,275 owners.
