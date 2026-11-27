@@ -180,7 +180,7 @@ Small combinations are pulled towards the overall mean, $(n \cdot \text{mean of 
 column; $\alpha$ is chosen as described in Section~3.2. We also leave out the heating information, the
 municipality, or both: the register shows today's heating, while the target comes from earlier years, and the
 municipality has many small categories. Every model learns either from all buildings or from the houses of the
-training folds only (Section~4.4).
+training folds only (Section~\ref{sec:housesonly}).
 
 \textbf{Two extra features for houses.} An analysis of the cross-validation errors by feature showed one
 systematic error that changes the list: small houses are predicted too high and medium-sized ones too low.
@@ -217,20 +217,66 @@ ridge does by learning from houses only.
 
 % =====================================================================
 \section{Results in cross-validation}
-\owner{Person 4 (4.1, 4.3), Person 5 (4.2), Person 1 (4.4)}{1 page}
+\owner{Person 4 (4.1), Person 5 (4.2), Person 1 (4.3)}{1 page}
 
 \subsection{Model comparison}
-\todo{Table: baselines and all models, houses first, all buildings next to them; mean $\pm$ SE
-(\texttt{output/tables/models\_cv\_summary.csv}). One figure (task 29).}
+\begin{table}[ht]
+\centering\small
+\begin{tabular}{llccc}
+\toprule
+ & & \multicolumn{2}{c}{Houses} & All buildings \\
+Variant & Trained on & Top 20\% (\%) & MAE & Top 20\% (\%) \\
+\midrule
+Training mean (baseline) & all & 34.0 $\pm$ 3.9 & 117.5 & 28.8 \\
+Expert rule (baseline)   & all & 45.1 $\pm$ 3.5 & 106.1 & 47.1 \\
+\midrule
+Linear regression & all & 54.0 $\pm$ 3.1 & 104.8 & 57.0 \\
+Ridge             & all & 54.5 $\pm$ 3.6 & 106.7 & 56.1 \\
+Lasso             & all & 54.0 $\pm$ 3.1 & 104.9 & 57.1 \\
+Logistic regression (Section~4.2) & all & 53.6 $\pm$ 2.9 & -- & 56.2 \\
+\midrule
+Ridge without expert rule  & all & 53.6 $\pm$ 2.4 & 104.5 & 56.4 \\
+Ridge without municipality & all & 54.5 $\pm$ 4.7 & 105.4 & 55.4 \\
+Ridge without heating      & all & 55.7 $\pm$ 3.3 & 106.6 & 55.7 \\
+Ridge without both         & all & 52.8 $\pm$ 6.1 & 107.2 & 53.4 \\
+\midrule
+Ridge, house interactions         & all & 58.3 $\pm$ 2.7 & 105.5 & 57.1 \\
+\quad + compactness               & all & 59.1 $\pm$ 2.6 & 105.4 & 57.1 \\
+Ridge                             & houses & 60.4 $\pm$ 2.0 & 107.1 & -- \\
+\quad + compactness               & houses & 60.4 $\pm$ 3.3 & 107.3 & -- \\
+Gradient boosting (Section~3.4)   & all & 61.7 $\pm$ 4.4 & 102.2 & 59.7 \\
+\bottomrule
+\end{tabular}
+\caption{Cross-validation on one split into five folds: share of buildings above 450 in the top 20\% of the
+list (mean $\pm$ SE over the folds) and MAE in MJ/m\textsuperscript{2}. Models trained on houses only are
+judged on houses only.}
+\label{tab:models}
+\end{table}
+
+All models beat both baselines clearly (Table~\ref{tab:models}). Trained on all buildings, the linear models
+put about 54 houses above 450 among every 100 on the list, against 45 for the expert rule and 34 for a random
+list. The type of linear model hardly matters: linear regression, ridge and lasso lie within 0.5 points.
+The expert-rule column adds nothing measurable ($-0.9 \pm 3.3$ points for ridge without it), because
+construction period and energy group are already in the model as categories. We keep it, as it does no harm
+and sums up about 100 combinations in one column that the office can understand.
+
+Leaving out the municipality, the heating information or both does not clearly change the ranking either:
+for all three linear models, the differences lie between $-1.7$ and $+1.3$ points, all within one standard
+error. We keep the full set, since the expert rule needs the energy source. Important for the office: the
+ranking does not depend on the heating recorded in the register, which cannot be checked for undeclared houses.
+
+The largest step is to learn from houses only ($+6.0$ points for ridge, Section~\ref{sec:housesonly}). On this split,
+compactness gives the same hit rate ($0.0 \pm 1.5$ points), but it removes the systematic error by floor area
+described in Section~3.3. Ridge with house interactions lies in between. As these candidates lie within one
+standard error of each other, the final choice is made on five splits (Section~5.1). The MAE separates the
+models hardly at all (102 to 108 on houses).
 
 \subsection{Classification versus regression}
 \todo{Logistic regression 54.5\% vs.\ regression models 53.6--54.5\%; all differences below one SE; confusion matrix
 and precision/recall in one sentence (\texttt{code/04\_models.ipynb}, section 6; \texttt{output/tables/models\_cv\_classification\_vs\_regression.csv}).}
 
-\subsection{Feature sets}
-\todo{With and without heating information and municipality (task 22).}
 
-\subsection{Trained on houses only versus all buildings}
+\subsection{Trained on houses only versus all buildings}\label{sec:housesonly}
 Only about 9\% of our buildings are houses (1366 houses out of 14827 buildings). The question is: does a model that learns only from houses rank them better? Version A learns from all buildings of the four training folds (about 10165--10169), version B only from their houses (about 936--937). Both are judged on the same validation houses. For ridge, each version gets its own alpha because the best amount of shrinkage depends on how much data the model learns from, so we tune each one separately in cross-validation to compare both at their best setting.
 
 \begin{table}[ht]
@@ -258,10 +304,48 @@ optimistic. The final choice is made in Section~5.1.
 
 % =====================================================================
 \section{Final model and test result}
-\owner{Person 3 (5.1--5.3), Person 2 (5.4)}{1 page}
+\owner{Person 4 (5.1), Person 3 (5.2, 5.3), Person 2 (5.4)}{1 page}
 
 \subsection{Choice of the final model}
-\todo{The rule used to choose and the tie-break, fixed before the test set (task 26).}
+In Section~4 several variants lie within one standard error of each other, and a single split into five
+folds also depends on the luck of that split. Before opening the test set, we therefore let the best
+candidates compete on five splits of the 12,710 cross-validation buildings: the folds of Section~3.1 and
+four new splits (seeds 43--46) that follow the same two rules. Every candidate is tuned again in every split.
+The candidates, from simple to complex, are (1) ridge trained on houses only, (2) the same with compactness,
+(3) ridge on all buildings with house interactions and compactness, and (4) gradient boosting as a reference.
+Variants that were clearly behind in Section~4 do not take part; the two baselines run along.
+
+The five splits reuse the same houses, so the 25 fold values are not independent, and their usual standard
+error would be too small. We use the correction of Nadeau and Bengio \cite{nadeau}, in the form for repeated
+cross-validation of Bouckaert and Frank \cite[Section~3.3]{bouckaert}: the standard deviation of the 25 values is multiplied
+by $\sqrt{1/25 + 1/4}$, where $1/4$ is the ratio of validation to training data. The repeats average out the
+luck of one split, but not the limited number of houses, so the standard errors stay large (about 4 to 5 points).
+The rule was fixed before the race: the \emph{leader} has the highest mean over all 25 folds, and a simpler
+candidate wins if it is at most one corrected standard error behind it.
+
+\begin{figure}[ht]
+\centering
+\includegraphics[width=0.8\textwidth]{choice_race.png}
+\caption{Model race on five splits, judged on houses. Small dots: mean of each split; large dot and bar:
+mean over all 25 folds $\pm$ corrected standard error.}
+\label{fig:race}
+\end{figure}
+
+Ridge on houses only with compactness leads with 60.1\% houses above 450 in the top 20\%, and it is ahead in
+4 of 5 splits (Figure~\ref{fig:race}). Gradient boosting (58.8\%), ridge without compactness (58.5\%) and ridge
+with house interactions (58.1\%) all lie within one corrected standard error. Both baselines are clearly
+behind: the expert rule reaches 44.7\% ($-15.4 \pm 4.6$ points, worse in 24 of 25 folds) and the training
+mean 37.4\%. By our rule, ridge without compactness would win, as it is only $1.6 \pm 1.7$ points behind.
+We still chose ridge \emph{with} compactness. The rule prefers the simpler model because a more complex one
+should only be used if it is clearly better. Here, however, the two models are equally simple in practice:
+compactness is computed from floor area and floors, which the model already uses, so it needs no extra data
+and no extra work, and it has a physical reason (Section~3.3). The lead of 1.6 points may well be chance,
+but since it costs nothing, we take the model with the higher hit rate. Its penalty is the one with
+the highest mean over all 25 folds ($\alpha = 3.16$). We also considered combining the candidates
+with a meta-model (stacking), but did not build one: their errors correlate between 0.94 and 0.99, so the
+models make largely the same mistakes and have little to add to each other. A quick check confirms this:
+a simple average of their predictions does not rank houses better than the final model
+($-0.7 \pm 2.2$ and $-1.2 \pm 1.8$ points).
 
 \subsection{Test result}
 \todo{Evaluated exactly once on the test set; houses first, all buildings beside them (task 26).}
@@ -364,6 +448,13 @@ l'énergie (REn), rsGE L 2 30.01, art.~14 al.~1, as amended on 13 April 2022.
 Dwellings (GWR), canton of Geneva, with code list
 (\texttt{gebaeude\_batiment\_edificio}, \texttt{kodes\_codes\_codici}).
 Downloaded on 13 November 2026. \url{https://www.housing-stat.ch/__publicdata}
+
+\bibitem{nadeau} C.~Nadeau and Y.~Bengio, Inference for the generalization error,
+\emph{Machine Learning} 52(3), 239--281, 2003. \url{https://doi.org/10.1023/A:1024068626366}
+
+\bibitem{bouckaert} R.~R.~Bouckaert and E.~Frank, Evaluating the replicability of significance tests
+for comparing learning algorithms, in: \emph{Advances in Knowledge Discovery and Data Mining (PAKDD 2004)},
+Lecture Notes in Computer Science 3056, Springer, 3--12, 2004. \url{https://doi.org/10.1007/978-3-540-24775-3_3}
 
 \bibitem{ren} République et canton de Genève, Règlement d'application de la loi sur
 l'énergie (REn), rsGE L 2 30.01, art.~14 al.~1, as amended on 13 April 2022.
