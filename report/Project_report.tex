@@ -162,10 +162,34 @@ building the mean index of its construction period $\times$ energy group in the 
 statistical model, and the bar a model has to clear to be worth using.
 \end{itemize}
 
-\subsection{Preprocessing and regression models}
-\todo{Pipeline fitted on the training part of each fold; expert rule as one feature (target encoding);
-linear regression, ridge, lasso with and without the expert rule; choice of alpha (README decisions 4--8, 13--14,
-tasks 19--20).}
+\subsection{Features and models}
+\textbf{Preparation.} Missing numbers of floors (242 buildings) are filled with the median of the training folds.
+Floor area, floors and dwellings are strongly skewed, so we use $\log(1+x)$. The 18 energy-source codes of the
+register are merged into 8 energy groups.
+
+\textbf{The expert rule as one feature.} Instead of about 100 dummies for construction period $\times$ energy group,
+the models get one column: the mean index of the building's combination in the training folds (target encoding).
+Small combinations are pulled towards the overall mean, $(n \cdot \text{mean of the combination} + m \cdot
+\text{overall mean}) / (n + m)$ with $m = 20$. We wrote our own encoder, because scikit-learn's
+\texttt{TargetEncoder} cross-fits internally without our boiler groups. Unlike the expert-rule baseline
+(Section~3.2), the rule is here one feature among others.
+
+\textbf{Models and feature sets.} Linear regression, ridge and lasso are fitted with and without the expert-rule
+column; $\alpha$ is chosen as described in Section~3.2. We also leave out the heating information, the
+municipality, or both: the register shows today's heating, while the target comes from earlier years, and the
+municipality has many small categories. Every model learns either from all buildings or from the houses of the
+training folds only (Section~4.4).
+
+\textbf{Two extra features for houses.} An analysis of the cross-validation errors by feature showed one
+systematic error that changes the list: small houses are predicted too high and medium-sized ones too low.
+\emph{Compactness} addresses this. The register's floor area is the footprint, so the heated area is about
+footprint $\times$ floors. Heat loss per m\textsuperscript{2} grows with the outer surface per
+m\textsuperscript{2}: about $2/\text{floors}$ for roof and floor slab, plus a term in $1/\sqrt{\text{footprint}}$
+for the walls. We add these two columns; they need no extra data. \emph{House interactions} let ridge learn from
+all buildings while houses may differ: a house dummy and a copy ``$\times$ house'' of floor area, floors,
+construction period, energy group, expert rule and compactness, which is 0 for other buildings. The model learns
+one effect from all buildings plus a deviation for houses, and the penalty pulls this deviation towards zero
+unless the data support it.
 
 \subsection{Classification variant}
 \todo{Logistic regression on ``above 450 or not''; same folds, features and selection measure; C chosen by
