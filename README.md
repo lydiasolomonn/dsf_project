@@ -1,10 +1,10 @@
 # Predicting the Heating Energy Index (IDC) of Geneva Buildings
 
-**Question.** Owners of small residential buildings in Geneva do not have to declare their heating energy index (IDC).
+**Question:** Owners of small residential buildings in Geneva do not have to declare their heating energy index (IDC).
 Can the federal building register rank these houses so that the energy office contacts mostly owners whose house is above
 the legal threshold of 450 MJ/m² per year?
 
-**Answer in short.** Our final model, ridge regression trained on houses only with two compactness features, puts on
+**Answer in short:** Our final model, ridge regression trained on houses only with two compactness features, puts on
 average 60.1% problem houses into the top 20% of its ranking in cross-validation (five splits × five folds), against 44.7% for
 the expert rule (mean index of construction period × energy source) and 38% for a random choice. On the test set, evaluated
 once, it reaches 61.5% (24 of 39 houses; random 35.9%). With only 39 test houses on the list the test set cannot separate the
