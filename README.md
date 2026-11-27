@@ -73,7 +73,7 @@ perfect model could fill the whole list with problem houses only.
 3. Houses: buildings with one or two dwellings in the register (GKLAS 1110 and 1121). They approximate the target group
 (residential buildings with fewer than 5 heat consumers, which do not have to declare): the definition covers 95% of its
 23,123 buildings, and the building class is known for every building in the register, declared or not. Models are chosen
-and evaluated on houses (lecturer's feedback point 1).
+and evaluated on houses.
 
 ### Data (`01_preprocess.ipynb`)
 4. Target: one value per building, its latest 3-year average ending in 2023 or later. Yearly values of the same building are
@@ -103,7 +103,7 @@ Every step is fitted on the training part of each fold only.
 10. Expert rule as one feature (target encoding): instead of a dummy for each of the roughly 100 combinations of construction
 period and energy source, the model gets the mean index of the building's combination as one column. Small combinations are
 pulled towards the overall mean: (n · mean of the combination + m · overall mean) / (n + m), with m = 20. We use our own class
-`ExpertRuleEncoder`, because sklearn's `TargetEncoder` cross-fits without the boiler groups. Agreed with the lecturer.
+`ExpertRuleEncoder`, because sklearn's `TargetEncoder` cross-fits without the boiler groups as agreed with the lecturer.
 11. Energy groups: `energy_group` (8 groups) instead of the 18 register codes; "other" mainly holds "Unbestimmt" and "Andere".
 12. Rare categories: categories seen fewer than 20 times in training, or not at all, go into one "infrequent" column.
 13. Numbers: missing floors are filled with the training median; floor area, floors and dwellings are log(1 + x)-transformed
