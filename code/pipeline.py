@@ -27,9 +27,9 @@ FEATURES = NUMERIC + CATEGORICAL + HEATING + MUNICIPALITY
 
 MIN_FREQUENCY = 20  # categories seen fewer than 20 times in training are merged into "infrequent"
 SMOOTHING = 20      # weight m of the overall mean in the expert rule (see ExpertRuleEncoder)
-SPLINE_KNOTS = 5    # knots of the floor-area spline (switch area_spline, README decision 21)
+SPLINE_KNOTS = 5    # knots of the floor-area spline (switch area_spline, README decision 25)
 
-# columns that get a copy "x house" with the switch house_interactions (README decision 23), by the start
+# columns that get a copy "x house" with the switch house_interactions (README decision 27), by the start
 # of their name after preprocessing: floor area, floors, construction period, energy group, expert rule,
 # and the compactness columns ("inv_...") if they are switched on
 INTERACT_PREFIXES = ("floor_area", "floors", "construction_period_", "energy_group_", "expert_rule", "inv_")
@@ -45,7 +45,7 @@ def split_xy(df):
     y = df["y"].to_numpy(dtype=float)
     is_house = df["house"].to_numpy(dtype=bool)
     groups = df["group_id"].to_numpy()
-    # the house flag is only used by the switch house_interactions (README decision 23); all other branches
+    # the house flag is only used by the switch house_interactions (README decision 27); all other branches
     # pick their columns by name and drop the rest, so every other model ignores it
     X["house"] = is_house
     return X, y, is_house, groups
@@ -108,7 +108,7 @@ def _numeric_branch():
 
 
 def _area_spline_branch():
-    # floor area as a curve instead of a straight line (README decision 21): after the log, a spline
+    # floor area as a curve instead of a straight line (README decision 25): after the log, a spline
     # splits the area range at 5 knots (placed at quantiles, so each piece has about as many buildings)
     # and fits a smooth cubic piece between them. Beyond the training range it continues as a straight line.
     return Pipeline([
@@ -128,7 +128,7 @@ def _compactness(X):
 
 
 def _compactness_branch():
-    # outer surface per m² of heated area (README decision 24): roof and floor slab give about 2 / floors,
+    # outer surface per m² of heated area (README decision 26): roof and floor slab give about 2 / floors,
     # the walls a term in 1 / sqrt(footprint). Small, low houses have the most surface per m².
     return Pipeline([
         ("impute", SimpleImputer(strategy="median")),
@@ -139,7 +139,7 @@ def _compactness_branch():
 
 
 class HouseInteractions(BaseEstimator, TransformerMixin):
-    """House interactions (README decision 23). Gets the named columns after preprocessing (a DataFrame with
+    """House interactions (README decision 27). Gets the named columns after preprocessing (a DataFrame with
     a "house" column) and adds a copy "<column> x house" of every column whose name starts with one of the
     prefixes: equal to the column for houses, 0 for all other buildings. The model then learns one effect
     from all buildings plus a deviation for houses. Learns nothing itself (fit only stores the column names)."""
@@ -187,9 +187,9 @@ def build_preprocessor(expert_rule=True, heating=True, municipality=True, smooth
     heating=False      without energy group and heating system; the expert rule is then also left out,
                        because it needs the energy group
     municipality=False without municipality
-    area_spline=True   floor area as a spline (a curve) instead of one straight line (README decision 21)
-    compactness=True   two extra columns, 1 / sqrt(floor area) and 1 / floors (README decision 24)
-    house_interactions=True  a house dummy plus a copy "x house" of the columns in INTERACT_PREFIXES (decision 23)
+    area_spline=True   floor area as a spline (a curve) instead of one straight line (README decision 25)
+    compactness=True   two extra columns, 1 / sqrt(floor area) and 1 / floors (README decision 26)
+    house_interactions=True  a house dummy plus a copy "x house" of the columns in INTERACT_PREFIXES (decision 27)
     """
     categorical = CATEGORICAL + (HEATING if heating else [])
     numeric = [c for c in NUMERIC if not (area_spline and c == "floor_area")]
@@ -261,7 +261,7 @@ class AboveThreshold(ClassifierMixin, BaseEstimator):
 
 
 class ExpertRuleBaseline(RegressorMixin, BaseEstimator):
-    """Baseline expert rule (task 18, README decision 12): every building gets the mean index of its
+    """Baseline expert rule (task 18, README decision 16): every building gets the mean index of its
     construction period x energy group in the training part, without smoothing. A combination not seen
     in training gets the overall mean. Takes the raw table (no preprocessing)."""
 
