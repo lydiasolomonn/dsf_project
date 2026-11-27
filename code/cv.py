@@ -224,7 +224,7 @@ def paired_difference(per_fold_a, per_fold_b, metric=SELECTION, group="houses"):
 
 
 # ---------------------------------------------------------------------------
-# 8. Error analysis by feature (README decision 20)
+# 8. Error analysis by feature (README decision 24)
 # ---------------------------------------------------------------------------
 def error_by_group(error, groups, min_n=20, compare=None):
     """Mean error per category of a feature, e.g. per construction period.
@@ -308,7 +308,7 @@ def plot_error_by_feature(tables, labels=("model", "second model"), ncols=3, pat
 
 
 # ---------------------------------------------------------------------------
-# 9. Repeated cross-validation: the model race (README decisions 25-27)
+# 9. Repeated cross-validation: the model race (README decisions 29-32)
 # ---------------------------------------------------------------------------
 def make_folds(data, seed, n_folds=5):
     """A new split of the cross-validation buildings into n_folds folds, with the same rules as the split in
@@ -324,7 +324,7 @@ def make_folds(data, seed, n_folds=5):
 
 
 def run_variant(spec, X, y, is_house, folds):
-    """One variant through one split, tuned as in 04_models (decision 14). spec is a dict:
+    """One variant through one split, tuned as in 04_models (decision 18). spec is a dict:
     model:    a model class or function, or for a baseline the class itself (no pipeline)
     tune:     (setting, values) or None, e.g. ("alpha", RIDGE_ALPHAS)
     kwargs:   fixed arguments of the model; switches: arguments of build_pipeline
@@ -397,7 +397,7 @@ def race_table(per_fold_by_name, metric=SELECTION):
 
 
 def choose_model(per_fold_by_name, order, metric=SELECTION):
-    """The decision rule (README decision 27). order: the candidates from simple to complex.
+    """The decision rule (README decision 32). order: the candidates from simple to complex.
     Leader = highest mean over all folds of all runs. A simpler candidate wins if it is at most one corrected
     standard error behind the leader; among those, the simplest. Returns the winner, the leader and a table."""
     means = {name: _houses(per_fold_by_name[name], metric).mean() for name in order}
