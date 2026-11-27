@@ -33,7 +33,7 @@
 % ---------------------------------------------------------------------
 
 \title{Predicting the Heating Energy Index of Geneva Buildings}
-\author{Group 7: [first and last names of all members]}
+\author{Group 7: Jenny Braunstorfer, Anastasija Stirbanovic, Lydia Kristina Solomon,\\ Kangyue Wang, Elisa Stepanski}
 \date{[submission date], Fundamentals of Data Science, University of St.\ Gallen}
 
 \begin{document}
@@ -235,10 +235,7 @@ Ridge             & all & 54.5 $\pm$ 3.6 & 106.7 & 56.1 \\
 Lasso             & all & 54.0 $\pm$ 3.1 & 104.9 & 57.1 \\
 Logistic regression (Section~4.2) & all & 53.6 $\pm$ 2.9 & -- & 56.2 \\
 \midrule
-Ridge without expert rule  & all & 53.6 $\pm$ 2.4 & 104.5 & 56.4 \\
-Ridge without municipality & all & 54.5 $\pm$ 4.7 & 105.4 & 55.4 \\
-Ridge without heating      & all & 55.7 $\pm$ 3.3 & 106.6 & 55.7 \\
-Ridge without both         & all & 52.8 $\pm$ 6.1 & 107.2 & 53.4 \\
+Ridge without heating and municipality & all & 52.8 $\pm$ 6.1 & 107.2 & 53.4 \\
 \midrule
 Ridge, house interactions         & all & 58.3 $\pm$ 2.7 & 105.5 & 57.1 \\
 \quad + compactness               & all & 59.1 $\pm$ 2.6 & 105.4 & 57.1 \\
@@ -377,54 +374,6 @@ between 1946 and 1980 make up 65.5\% of the hits and 75.3\% of the false alarms.
 \end{itemize}}
 
 % =====================================================================
-Declaration on the Ethical Use of AI and Autonomy 
-This form documents whether and how AI-supported tools (e.g. ChatGPT) were used in the 
-preparation of your scientific work. It promotes the responsible use of AI and does not replace 
-your own work. 
-List of Aids
-Aid/ Tool	Purpose
-Claude/ 	Claude was used to formulate the structure of the paper, simplify explanation of certain topic, improve the linguistic clarity, assist with reference, and assist with certain codes understanding and inspiration. 
-ChatGPT/	Aid for structure.
-DeepL/	DeepL was used for grammar checking.
-
-Declaration of Authorship 
- 
-I hereby declare, 
- 
-• that I have written this thesis independently, 
-• that I have written the thesis using only the aids specified in the index; 
-• that all parts of the thesis produced with the help of aids have been declared; 
-• that I have handled both input and output responsibly when using AI. I confirm that I 
-have therefore only read in public data or data released with consent and that I have 
-checked, declared and comprehensibly referenced all results and/or other forms of AI 
-assistance in the required form and that I am aware that I am responsible if incorrect 
-content, violations of data protection law, copyright law or scientific misconduct (e.g. 
-plagiarism) have also occurred unintentionally; 
-• that I have mentioned all sources used and cited them correctly according to established 
-academic citation rules; 
-• that I have acquired all immaterial rights to any materials I may have used, such as 
-images or graphics, or that these materials were created by me; 
-• that the topic, the thesis, or parts of it have not already been the object of any work or 
-examination of another course, unless this has been expressly agreed with the faculty 
-member in advance and is stated as such in the thesis; 
-• that I am aware of the legal provisions regarding the publication and dissemination of 
-parts or the entire thesis and that I comply with them accordingly; 
-• that I am aware that my thesis can be electronically checked for plagiarism and for 
-third-party authorship of human or technical origin, and that I hereby grant the 
-University of St. Gallen the copyright according to the Examination Regulations as far 
-as it is necessary for the administrative actions; 
-• that I am aware that the University will prosecute a violation of this Declaration of 
-Authorship and that disciplinary as well as criminal consequences may result, which 
-may lead to expulsion from the University or to the withdrawal of my title. 
-By submitting this thesis, I confirm through my conclusive action that I am submitting the 
-Declaration of Authorship, that I have read and understood it, and that it is true.
-
-Jenny Braunstorfer, Anastasija Stirbanovic, Lydia Kristina Solomon, Kangyue Wang, Elisa Stepanski
-Signature:
-St. Gallen, November 29th, 2026
-
-
-% =====================================================================
 \begin{thebibliography}{9}
 
 
@@ -456,21 +405,31 @@ Downloaded on 13 November 2026. \url{https://www.housing-stat.ch/__publicdata}
 for comparing learning algorithms, in: \emph{Advances in Knowledge Discovery and Data Mining (PAKDD 2004)},
 Lecture Notes in Computer Science 3056, Springer, 3--12, 2004. \url{https://doi.org/10.1007/978-3-540-24775-3_3}
 
-\bibitem{ren} République et canton de Genève, Règlement d'application de la loi sur
-l'énergie (REn), rsGE L 2 30.01, art.~14 al.~1, as amended on 13 April 2022.
-\url{https://silgeneve.ch/legis/data/rsg_l2_30p01.htm}
-
 \end{thebibliography}
 
 \section*{AI-use statement}
 
-We used Claude (Anthropic) during the project. It helped us with the following parts:
+We used three AI tools: Claude (Anthropic) as the main aid, ChatGPT (OpenAI) for the structure of the report,
+and DeepL for grammar checking. Claude helped us with the following parts:
 
 \begin{itemize}
-  \item \textbf{Ideas:} brainstorming project topics and data sources; first feasibility checks of candidate datasets (e.g.\ whether a simple baseline would already be as good as a model); pointing out possible problems such as leakage and class imbalance. The choice of topic, target, house definition and selection measure was ours and was agreed with the lecturer.
-  \item \textbf{Code:} first drafts of functions and notebooks, which we then adapted, ran on our data and tested: the scoring functions (\texttt{metrics.py}, tested on a small example counted by hand), the train/test split and cross-validation folds, and the baselines [plus: other parts, e.g.\ pipeline, models]. Help with setting up Python.
-  \item \textbf{Text:} suggestions for wording in the project description, the documented decisions in the README and the report.
-  \item \textbf{Checks:} reviewing our code and results for errors and plausibility, e.g.\ whether preprocessing learned only from the training part, and whether the random baseline gave the expected share of houses above 450.
-  \item \textbf{Explanations:} explaining methods we used, such as grouped cross-validation and target encoding, so that each of us understands the concepts.
+  \item \textbf{Ideas:} brainstorming project topics and data sources; first feasibility checks of candidate
+  datasets; pointing out possible problems such as leakage and class imbalance. The choice of topic, target,
+  house definition and selection measure was ours and was agreed with the lecturer.
+  \item \textbf{Code:} first drafts of functions and notebooks, which we then adapted, ran on our data and
+  checked: the scoring functions (tested on a small example counted by hand), the split and cross-validation
+  folds, the baselines, the preprocessing pipeline with the expert-rule encoder, the model comparison and the
+  repeated cross-validation for the final choice. Help with setting up Python.
+  \item \textbf{Text:} suggestions for wording and structure in the project description, the documented
+  decisions in the README and this report.
+  \item \textbf{Checks:} reviewing our code and results for errors and plausibility, e.g.\ whether the
+  preprocessing learned only from the training part, and whether report, README and code report the same numbers.
+  \item \textbf{Explanations:} explaining methods we used, such as grouped cross-validation, target encoding and
+  the corrected standard error, so that each of us understands them.
 \end{itemize}
+
+All decisions on data, features, models and the final choice were taken by us. Every number in this report
+comes from our own code and output files, and we checked the AI suggestions before using them. We are
+responsible for the content of this report.
+
 \end{document}
