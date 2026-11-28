@@ -53,6 +53,7 @@
 \end{itemize}}
 
 % =====================================================================
+=
 \section{Data}
 \owner{Person 1 (2.1, 2.2), Person 2 (2.3), Person 5 (2.4, 2.5)}{1 page}
 
@@ -76,9 +77,9 @@ because older averages may describe buildings before renovations or heating chan
 \textbf{Implausible values}: We keep 50--1,500 MJ/m\textsuperscript{2} per year; lower values point to a
 wrong floor area, higher ones to data errors (25 buildings removed).
 
-\textbf{Houses definition}: We define houses as buildings with one or two dwellings in the register (GKLAS 1110 and 1121), because the register is the only source that also covers the undeclared houses our model is meant for. This definition covers 95\% of the target group (21,906 of the 23,123 residential buildings with fewer than 5 heat consumers). As a check, 74\% of our houses (1,133 of 1,531) are also listed as houses in the heating file, and the houses on which the two sources disagree have a similar median index (406.5 vs.\ 415).
+\textbf{Houses definition}: We define houses as buildings with one or two dwellings in the register, because it is the only source that also covers the undeclared houses our model is meant for. This definition covers 95\% of the target group (21,906 of the 23,123 residential buildings with fewer than 5 heat consumers). As a check, 74\% of our houses are also listed as houses in the heating file.
 
-\textbf{Year effect}: Index values fall over time: for the same buildings, the median fell by 43 between the periods ending in 2023 and 2026, so our older targets may be slightly too high. For houses there is no clear trend. Keeping only periods ending in 2025 would cost us about 450 of our 1,531 houses, so we keep all periods from 2023 on.
+\textbf{Year effect}: Index values fall over time (same buildings: $-43$; same houses: $-42$), so older targets, 27\% of houses vs.\ 13\% of all buildings, may be up to about 40 too high. Keeping only periods ending in 2025 would cost about 450 of our 1,531 houses, so we keep all periods from 2023 on.
 
 Table~\ref{tab:mergeloss} shows what each step removes. The heating checks are explained in Section~2.3.
 
@@ -101,16 +102,16 @@ Same energy source today (final data)       & 14,827 & 1,366 \\
 \end{table}
 
 
-\subsection{Features and the dates of the heating information}
-\textbf{Features} come only from the building register, the one source that also covers undeclared houses:
-construction period, building class, energy source (grouped into gas, oil, district heat, heat pump, wood, electric,
-other), heating system, footprint (floor) area, floors, dwellings and municipality. A missing category becomes ``unknown'';
-missing numbers are filled inside the pipeline with the median of the training folds only, so no information leaks
-from the validation or test data. The heated floor area is never a feature, because a building only has it once it
-has declared.
-
-\textbf{Heating changes:} The register shows \emph{today's} heating,
-but the target was measured in earlier years. If the heating changed in between, the features describe a different heating than the one that produced the value. We drop two kinds of buildings. (1) 697 buildings (65 houses) whose energy source changed \emph{during} their three target years, so their value mixes two heating systems. Some of these switches look more like a change in how the energy was recorded than a new heating system (among houses, ``other'' $\to$ heat pump 16 times and district heat $\to$ oil 13 times); we drop them anyway to be safe. (2) Among the 14,721 buildings where both files give a real energy group, 928 (100 houses) use a different energy source today than in their target years. Some of these differences are hard to explain as real replacements (e.g.\ 142 buildings from gas to oil, the opposite of the usual direction) and may come from the two files recording the energy source differently. We did not verify this, and it does not change our decision: either way, features and target do not match. The register's update date could not help, because almost all entries carry a date in 2024 or 2025.
+\subsection{Features}
+Features come only from the building register, the one source that also covers
+undeclared houses: construction period, building class, energy group, heating system,
+footprint area, floors, dwellings and municipality. A missing category becomes ``unknown'' and missing numbers are handled inside the pipeline (Section~\ref{sec:models}). The heated
+floor area is never a feature, because a building only has it once it has declared.
+The register shows \emph{today's} heating, while the target was measured in earlier
+years, so for a building whose heating changed, features and target describe different
+heating systems. We therefore drop buildings whose energy source changed during their
+three target years, and buildings that use a different energy source today than in
+their target years (Table~\ref{tab:mergeloss}).
 
 
 \subsection{Descriptive analysis}
